@@ -31,8 +31,7 @@ export default function ResultPage() {
     : 0;
 
   useEffect(() => {
-    const label = GRADE_LABEL[score.grade];
-    speak(`검사 결과입니다. 종합 ${score.total}점, ${label} 등급입니다.`);
+    speak(`검사 결과입니다. 종합 ${score.total}점, ${GRADE_LABEL[score.grade]} 등급입니다.`);
   }, [score.grade, score.total, speak]);
 
   return (
@@ -86,7 +85,7 @@ export default function ResultPage() {
 
       {/* 액션 버튼 */}
       <div className="space-y-3">
-        <ShareButton gradeLabel={GRADE_LABEL[score.grade]} total={score.total} />
+        <ShareButton grade={score.grade} total={score.total} />
         <Link
           href="/test"
           className="btn-senior btn-senior-primary w-full text-center"
