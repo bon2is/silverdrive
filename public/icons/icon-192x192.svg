@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <rect width="192" height="192" rx="32" fill="#1a1a2e"/>
+  <circle cx="96" cy="75" r="32" fill="#f5c518"/>
+  <path d="M40 145 Q96 110 152 145" stroke="#f5c518" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <text x="96" y="178" font-family="sans-serif" font-size="18" font-weight="bold" fill="#f5c518" text-anchor="middle">실버드라이브</text>
+</svg>
