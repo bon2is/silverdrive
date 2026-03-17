@@ -3,69 +3,50 @@ import { AdBanner } from "@/components/AdBanner";
 
 export default function Home() {
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center px-6 py-12">
+    <main className="flex min-h-dvh flex-col items-center px-6 py-10">
       {/* Logo / Title */}
-      <div className="mb-10 text-center">
-        <div className="mb-4 text-6xl">🚗</div>
+      <div className="mb-8 text-center">
+        <div className="mb-3 text-6xl">🚗</div>
         <h1
-          className="mb-3 font-black leading-tight no-select"
+          className="mb-2 font-black leading-tight no-select"
           style={{ fontSize: "2.25rem", color: "var(--color-senior-primary)" }}
         >
           실버드라이브
         </h1>
         <p
           className="leading-relaxed"
-          style={{ fontSize: "1.25rem", color: "var(--color-senior-text-muted)" }}
+          style={{ fontSize: "1.125rem", color: "var(--color-senior-text-muted)" }}
         >
-          운전면허 갱신 인지능력 자가진단
-          <br />
-          연습 서비스
+          운전면허 갱신 인지능력 자가진단 연습
         </p>
       </div>
 
-      {/* CTA */}
+      {/* CTA — 화면 상단 가까이 크게 배치 */}
       <Link
         href="/test"
-        className="btn-senior btn-senior-primary mb-6 w-full max-w-sm text-center"
+        className="btn-senior btn-senior-primary w-full max-w-sm text-center"
+        style={{ fontSize: "1.5rem", padding: "1.1rem" }}
       >
-        테스트 시작하기
+        전체 검사 시작하기
       </Link>
 
       {/* Info cards */}
-      <div className="w-full max-w-sm space-y-4">
-        <div className="card-senior flex items-start gap-4">
-          <span className="text-3xl">⚡</span>
-          <div>
-            <p className="font-bold" style={{ fontSize: "1.125rem" }}>
-              자극 반응 테스트
-            </p>
-            <p style={{ fontSize: "1rem", color: "var(--color-senior-text-muted)" }}>
-              화면에 나타나는 도형을 빠르게 클릭
-            </p>
+      <div className="mt-8 w-full max-w-sm space-y-3">
+        <p className="font-bold text-center" style={{ fontSize: "1rem", color: "var(--color-senior-text-muted)" }}>
+          검사 항목
+        </p>
+        {[
+          { icon: "🧠", label: "기억력 검사" },
+          { icon: "🔢", label: "주의력 검사" },
+          { icon: "🚦", label: "신호 반응 검사" },
+          { icon: "🪧", label: "표지판 식별 검사" },
+          { icon: "⚠️", label: "위험 지각 검사" },
+        ].map((t) => (
+          <div key={t.label} className="card-senior flex items-center gap-3 py-3">
+            <span className="text-2xl">{t.icon}</span>
+            <p className="font-bold" style={{ fontSize: "1.0625rem" }}>{t.label}</p>
           </div>
-        </div>
-        <div className="card-senior flex items-start gap-4">
-          <span className="text-3xl">🚦</span>
-          <div>
-            <p className="font-bold" style={{ fontSize: "1.125rem" }}>
-              표지판 식별 테스트
-            </p>
-            <p style={{ fontSize: "1rem", color: "var(--color-senior-text-muted)" }}>
-              도로 표지판을 정확하게 구분
-            </p>
-          </div>
-        </div>
-        <div className="card-senior flex items-start gap-4">
-          <span className="text-3xl">⚠️</span>
-          <div>
-            <p className="font-bold" style={{ fontSize: "1.125rem" }}>
-              위험 지각 테스트
-            </p>
-            <p style={{ fontSize: "1rem", color: "var(--color-senior-text-muted)" }}>
-              도로 위 위험 요소를 빠르게 인지
-            </p>
-          </div>
-        </div>
+        ))}
       </div>
 
       <div className="mt-8 w-full max-w-sm flex justify-center">
@@ -74,7 +55,7 @@ export default function Home() {
 
       <p
         className="mt-6 text-center"
-        style={{ fontSize: "0.9rem", color: "var(--color-senior-text-muted)" }}
+        style={{ fontSize: "0.875rem", color: "var(--color-senior-text-muted)" }}
       >
         모든 테스트는 무료입니다
       </p>
