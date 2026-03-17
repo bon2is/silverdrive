@@ -11,10 +11,21 @@ const notoSansKR = Noto_Sans_KR({
   display: "swap",
 });
 
+const BASE_URL = "https://silverdrive.andxo.com";
+
 export const metadata: Metadata = {
-  title: "실버드라이브 - 고령자 운전 적성검사 연습",
+  metadataBase: new URL(BASE_URL),
+  title: {
+    default: "실버드라이브 - 75세 운전면허 갱신 인지능력검사 무료 연습",
+    template: "%s | 실버드라이브",
+  },
   description:
-    "75세 이상 고령 운전자를 위한 인지능력 자가진단 연습 서비스. 실제 검사와 유사한 반응 속도, 표지판 식별, 위험 지각 테스트를 제공합니다.",
+    "75세 운전면허 갱신 걱정되시나요? 실제 적성검사와 동일한 기억력·주의력·반응속도·표지판·위험지각 5가지 검사를 무료로 연습하세요. 부모님께 보내드리세요.",
+  keywords: [
+    "75세 운전면허 갱신", "고령 운전자 적성검사", "인지능력검사 연습",
+    "운전면허 갱� 연습", "노인 운전면허", "적성검사 자가진단",
+    "실버드라이브", "운전 인지능력", "고령자 운전 테스트",
+  ],
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -23,6 +34,23 @@ export const metadata: Metadata = {
   },
   formatDetection: { telephone: false },
   icons: { apple: "/icons/icon-192x192.svg" },
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    url: BASE_URL,
+    siteName: "실버드라이브",
+    title: "실버드라이브 - 75세 운전면허 갱신 인지능력검사 무료 연습",
+    description:
+      "실제 적성검사와 동일한 5가지 인지능력 검사를 무료로 연습하세요. 부모님께 보내드리세요.",
+    images: [{ url: "/opengraph-image.png", width: 1200, height: 630, alt: "실버드라이브" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "실버드라이브 - 운전면허 갱신 인지능력검사 무료 연습",
+    description: "75세 이상 면허 갱신 대상자를 위한 무료 자가진단 연습 서비스",
+    images: ["/opengraph-image.png"],
+  },
+  alternates: { canonical: BASE_URL },
 };
 
 export const viewport: Viewport = {
