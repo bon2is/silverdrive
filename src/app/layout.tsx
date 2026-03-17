@@ -33,7 +33,7 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
-const adsenseClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
+const adsenseClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT?.trim();
 
 export default function RootLayout({
   children,

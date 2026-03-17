@@ -12,8 +12,8 @@ declare global {
 
 function AdUnit() {
   const pushed = useRef(false);
-  const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
-  const slot   = process.env.NEXT_PUBLIC_ADSENSE_SLOT;
+  const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT?.trim();
+  const slot   = process.env.NEXT_PUBLIC_ADSENSE_SLOT?.trim();
 
   useEffect(() => {
     if (!client || pushed.current) return;
