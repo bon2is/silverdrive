@@ -29,7 +29,15 @@ export default function TestHubPage() {
         운전 적성 자가진단
       </h1>
 
-      <div className="mb-8 space-y-3">
+      <button
+        onClick={() => router.push("/test/memory")}
+        className="btn-senior btn-senior-primary w-full mb-6"
+        style={{ fontSize: "1.375rem" }}
+      >
+        전체 검사 시작하기
+      </button>
+
+      <div className="mb-6 space-y-3">
         {TESTS.map((t, i) => (
           <div key={i} className="card-senior flex items-center gap-4">
             <span className="text-3xl">{t.icon}</span>
@@ -45,19 +53,11 @@ export default function TestHubPage() {
         ))}
       </div>
 
-      <div className="mb-6 flex justify-center">
+      <div className="mb-4 flex justify-center">
         <AdBanner />
       </div>
 
-      <button
-        onClick={() => router.push("/test/memory")}
-        className="btn-senior btn-senior-primary w-full"
-        style={{ fontSize: "1.375rem" }}
-      >
-        전체 검사 시작하기
-      </button>
-
-      <Link href="/" className="mt-4 block text-center" style={{ fontSize: "1rem", color: "var(--color-senior-text-muted)" }}>
+      <Link href="/" className="mt-2 block text-center" style={{ fontSize: "1rem", color: "var(--color-senior-text-muted)" }}>
         ← 홈으로 돌아가기
       </Link>
     </main>
