@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdBanner } from "@/components/AdBanner";
 
 export default function Home() {
   return (
@@ -67,8 +68,12 @@ export default function Home() {
         </div>
       </div>
 
+      <div className="mt-8 w-full max-w-sm flex justify-center">
+        <AdBanner />
+      </div>
+
       <p
-        className="mt-10 text-center"
+        className="mt-6 text-center"
         style={{ fontSize: "0.9rem", color: "var(--color-senior-text-muted)" }}
       >
         모든 테스트는 무료입니다
