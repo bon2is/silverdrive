@@ -45,26 +45,13 @@ function AdUnit() {
     );
   }
 
-  // Slot ID 있음 → 수동 광고 단위
-  if (slot) {
-    return (
-      <ins
-        className="adsbygoogle"
-        style={{ display: "block", width: "300px", height: "250px" }}
-        data-ad-client={client}
-        data-ad-slot={slot}
-        data-ad-format="rectangle"
-      />
-    );
-  }
-
-  // Slot ID 없음 → Auto Ads (스크립트만으로 자동 배치, ins 불필요)
-  // Auto Ads는 layout.tsx의 script 삽입만으로 동작
+  // 구글 AdSense 스니펫과 동일하게 적용
   return (
     <ins
       className="adsbygoogle"
-      style={{ display: "block", width: "100%", maxWidth: "320px" }}
+      style={{ display: "block" }}
       data-ad-client={client}
+      data-ad-slot={slot}   // 없으면 undefined → 속성 미출력, Auto Ads로 동작
       data-ad-format="auto"
       data-full-width-responsive="true"
     />
