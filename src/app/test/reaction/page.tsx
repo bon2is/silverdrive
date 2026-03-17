@@ -8,53 +8,55 @@ import { useTestStore } from "@/lib/useTestStore";
 import { useSpeech } from "@/lib/useSpeech";
 
 const TOTAL_ROUNDS = 5;
-const TIMEOUT_MS   = 3000;
-const MIN_DELAY    = 1500;
-const MAX_DELAY    = 3000;
+const RED_MIN      = 1500;
+const RED_MAX      = 3000;
+const GREEN_LIMIT  = 3000;
 
-type Phase = "guide" | "waiting" | "active" | "feedback";
+type Light   = "red" | "green";
+type Phase   = "guide" | "waiting" | "red" | "green" | "feedback";
+type Outcome = "success" | "timeout" | "false-start";
 
-interface FeedbackState { success: boolean; ms: number }
+interface FeedbackState { outcome: Outcome; ms?: number }
 
 export default function ReactionTestPage() {
-  const router          = useRouter();
-  const { speak }       = useSpeech();
-  const addReactionTime = useTestStore((s) => s.addReactionTime);
+  const router             = useRouter();
+  const { speak }          = useSpeech();
+  const addReactionTime    = useTestStore((s) => s.addReactionTime);
+  const addReactionMistake = useTestStore((s) => s.addReactionMistake);
 
-  const [round,     setRound]     = useState(0);
-  const [phase,     setPhase]     = useState<Phase>("guide");
-  const [circlePos, setCirclePos] = useState({ x: 50, y: 50 });
-  const [feedback,  setFeedback]  = useState<FeedbackState | null>(null);
-  const [tapped,    setTapped]    = useState(false);
+  const [round,    setRound]    = useState(0);
+  const [phase,    setPhase]    = useState<Phase>("guide");
+  const [feedback, setFeedback] = useState<FeedbackState | null>(null);
+  const [tapped,   setTapped]   = useState(false);
 
-  const startTimeRef  = useRef<number>(0);
-  const delayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startTimeRef   = useRef<number>(0);
+  const roundRef       = useRef(0);
+  const delayTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // stale closure 방지: 타이머 콜백에서 최신 round를 읽기 위한 ref
-  const roundRef = useRef(0);
 
   const clearTimers = useCallback(() => {
-    if (delayTimerRef.current) clearTimeout(delayTimerRef.current);
+    if (delayTimerRef.current)  clearTimeout(delayTimerRef.current);
     if (activeTimerRef.current) clearTimeout(activeTimerRef.current);
   }, []);
 
-  useEffect(() => {
-    roundRef.current = round;
-  }, [round]);
+  useEffect(() => { roundRef.current = round; }, [round]);
+  useEffect(() => () => clearTimers(), [clearTimers]);
 
-  useEffect(() => {
-    return () => clearTimers();
-  }, [clearTimers]);
-
-  // ref-as-stable-callback 패턴: 타이머에서 항상 최신 핸들러를 호출
-  const handleResultRef = useRef<((success: boolean, ms: number) => void) | undefined>(undefined);
-  handleResultRef.current = (success: boolean, ms: number) => {
+  const handleResultRef = useRef<((outcome: Outcome, ms?: number) => void) | undefined>(undefined);
+  handleResultRef.current = (outcome, ms) => {
     clearTimers();
-    addReactionTime(ms);
-    setFeedback({ success, ms });
+    if (outcome === "false-start") {
+      addReactionMistake();
+    } else {
+      addReactionTime(ms ?? GREEN_LIMIT);
+    }
+    setFeedback({ outcome, ms });
     setPhase("feedback");
-    speak(success ? "잘 하셨어요!" : "조금 더 빠르게!");
-
+    speak(
+      outcome === "success"     ? "잘 하셨어요!" :
+      outcome === "false-start" ? "빨간불에는 누르지 마세요!" :
+      "조금 더 빠르게 눌러주세요!"
+    );
     const nextRound = roundRef.current + 1;
     activeTimerRef.current = setTimeout(() => {
       if (nextRound >= TOTAL_ROUNDS) {
@@ -63,92 +65,113 @@ export default function ReactionTestPage() {
         setRound(nextRound);
         startRoundRef.current?.();
       }
-    }, 1500);
+    }, 2000);
   };
 
   const startRoundRef = useRef<(() => void) | undefined>(undefined);
   startRoundRef.current = () => {
-    setPhase("waiting");
+    setPhase("red");
     setTapped(false);
     setFeedback(null);
-    const delay = MIN_DELAY + Math.random() * (MAX_DELAY - MIN_DELAY);
+    const delay = RED_MIN + Math.random() * (RED_MAX - RED_MIN);
     delayTimerRef.current = setTimeout(() => {
-      setCirclePos({ x: 20 + Math.random() * 60, y: 20 + Math.random() * 60 });
       startTimeRef.current = Date.now();
-      setPhase("active");
+      setPhase("green");
       activeTimerRef.current = setTimeout(
-        () => handleResultRef.current?.(false, TIMEOUT_MS),
-        TIMEOUT_MS
+        () => handleResultRef.current?.("timeout", GREEN_LIMIT),
+        GREEN_LIMIT
       );
     }, delay);
   };
 
   const startRound = useCallback(() => startRoundRef.current?.(), []);
 
-  const handleCircleTap = useCallback(() => {
-    if (tapped || phase !== "active") return;
+  const handleTap = useCallback((light: Light) => {
+    if (tapped) return;
     setTapped(true);
-    const ms = Date.now() - startTimeRef.current;
-    handleResultRef.current?.(true, ms);
-  }, [tapped, phase]);
+    if (light === "red") {
+      handleResultRef.current?.("false-start");
+    } else {
+      const ms = Date.now() - startTimeRef.current;
+      handleResultRef.current?.("success", ms);
+    }
+  }, [tapped]);
+
+  const feedbackColor =
+    feedback?.outcome === "success"     ? "var(--color-senior-success)" :
+    feedback?.outcome === "false-start" ? "var(--color-senior-danger)"  :
+    "var(--color-senior-warning)";
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <TestProgressBar current={round} total={TOTAL_ROUNDS} label="자극 반응 테스트" />
+      <TestProgressBar current={round} total={TOTAL_ROUNDS} label="③ 신호 반응 검사 · 3단계" />
 
       {phase === "guide" && (
         <div className="flex flex-1 flex-col justify-between px-6 py-4">
-          <SpeechGuide text="노란 원이 나타나면 최대한 빠르게 눌러주세요. 총 5번 반복합니다." />
-          <button
-            onClick={startRound}
-            className="btn-senior btn-senior-primary w-full"
-            style={{ fontSize: "1.375rem" }}
-          >
+          <SpeechGuide text="초록불이 켜지면 즉시 눌러주세요. 빨간불에는 누르지 마세요. 총 5번 반복합니다." />
+          <button onClick={startRound} className="btn-senior btn-senior-primary w-full" style={{ fontSize: "1.375rem" }}>
             시작하기
           </button>
         </div>
       )}
 
-      {(phase === "waiting" || phase === "active") && (
-        <div className="relative flex-1" style={{ backgroundColor: "#111" }}>
-          {phase === "waiting" && (
-            <p
-              className="absolute left-1/2 top-8 -translate-x-1/2 text-center"
-              style={{ fontSize: "1.25rem", color: "var(--color-senior-text-muted)" }}
-            >
-              잠깐 기다려주세요...
-            </p>
-          )}
-          {phase === "active" && (
-            <button
-              onClick={handleCircleTap}
-              disabled={tapped}
-              aria-label="노란 원 누르기"
-              style={{
-                position:        "absolute",
-                left:            `${circlePos.x}%`,
-                top:             `${circlePos.y}%`,
-                transform:       "translate(-50%, -50%)",
-                width:           "120px",
-                height:          "120px",
-                borderRadius:    "50%",
-                backgroundColor: "var(--color-senior-primary)",
-                border:          "none",
-                cursor:          "pointer",
-                boxShadow:       "0 0 30px rgba(245,197,24,0.7)",
-              }}
-            />
-          )}
+      {(phase === "red" || phase === "green") && (
+        <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6">
+          <p style={{ fontSize: "1.5rem", fontWeight: 700 }}>
+            {phase === "red" ? "🔴 기다려주세요..." : "🟢 지금 누르세요!"}
+          </p>
+
+          {/* 신호등 */}
+          <div
+            style={{
+              display:         "flex",
+              flexDirection:   "column",
+              alignItems:      "center",
+              gap:             "16px",
+              padding:         "24px 32px",
+              borderRadius:    "20px",
+              backgroundColor: "#222",
+            }}
+          >
+            {(["red", "yellow", "green"] as const).map((color) => {
+              const isActive =
+                (color === "red"   && phase === "red") ||
+                (color === "green" && phase === "green");
+              const baseColor = color === "red" ? "#e53935" : color === "yellow" ? "#f5c518" : "#4caf50";
+              return (
+                <button
+                  key={color}
+                  onClick={() => handleTap(color === "green" ? "green" : "red")}
+                  disabled={tapped}
+                  aria-label={color === "green" ? "초록불 누르기" : "신호등"}
+                  style={{
+                    width:           "100px",
+                    height:          "100px",
+                    borderRadius:    "50%",
+                    border:          "none",
+                    backgroundColor: isActive ? baseColor : "rgba(255,255,255,0.1)",
+                    boxShadow:       isActive ? `0 0 40px ${baseColor}cc` : "none",
+                    cursor:          color === "green" && phase === "green" ? "pointer" : "default",
+                    transition:      "all 0.2s",
+                  }}
+                />
+              );
+            })}
+          </div>
         </div>
       )}
 
       {phase === "feedback" && feedback && (
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6">
-          <span style={{ fontSize: "4rem" }}>{feedback.success ? "✅" : "⏰"}</span>
-          <p style={{ fontSize: "1.75rem", fontWeight: 700 }}>
-            {feedback.success ? "잘 하셨어요!" : "조금 더 빠르게!"}
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+          <span style={{ fontSize: "4rem" }}>
+            {feedback.outcome === "success" ? "✅" : feedback.outcome === "false-start" ? "🚫" : "⏰"}
+          </span>
+          <p style={{ fontSize: "1.75rem", fontWeight: 700, color: feedbackColor }}>
+            {feedback.outcome === "success"     ? "잘 하셨어요!" :
+             feedback.outcome === "false-start" ? "빨간불에 누르셨어요!" :
+             "조금 더 빠르게!"}
           </p>
-          {feedback.success && (
+          {feedback.outcome === "success" && feedback.ms != null && (
             <p style={{ fontSize: "1.25rem", color: "var(--color-senior-text-muted)" }}>
               반응 시간: {feedback.ms}ms
             </p>
