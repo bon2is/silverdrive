@@ -44,6 +44,11 @@ export default function RootLayout({
         <PwaRegister />
         {children}
 
+        {/* Auto Ads (앵커·전면광고) 비활성화 — adsbygoogle.js 로드 전에 실행 */}
+        {adsenseClient && (
+          <Script src="/ads-config.js" strategy="beforeInteractive" />
+        )}
+
         {/* AdSense 스크립트 — layout에서 1회만 로드 */}
         {adsenseClient && (
           <Script
