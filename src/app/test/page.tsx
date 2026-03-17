@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { SpeechGuide } from "@/components/SpeechGuide";
 import { useTestStore } from "@/lib/useTestStore";
-import { AdBanner } from "@/components/AdBanner";
 
 const TESTS = [
   { icon: "🧠", name: "기억력 검사",        desc: "단어 6개를 기억한 뒤 회상해요",    step: "1단계" },
@@ -51,10 +50,6 @@ export default function TestHubPage() {
             </span>
           </div>
         ))}
-      </div>
-
-      <div className="mb-4 flex justify-center">
-        <AdBanner />
       </div>
 
       <Link href="/" className="mt-2 block text-center" style={{ fontSize: "1rem", color: "var(--color-senior-text-muted)" }}>

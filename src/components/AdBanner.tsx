@@ -10,10 +10,18 @@ declare global {
   }
 }
 
-function AdUnit() {
+interface AdUnitProps {
+  /** "banner" = 하단 얇은 배너 (기본) | "rectangle" = 중앙 큰 직사각형 */
+  variant?: "banner" | "rectangle";
+}
+
+function AdUnit({ variant = "banner" }: AdUnitProps) {
   const pushed = useRef(false);
   const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT?.trim();
   const slot   = process.env.NEXT_PUBLIC_ADSENSE_SLOT?.trim();
+
+  const isRect   = variant === "rectangle";
+  const minHeight = isRect ? "250px" : "60px";
 
   useEffect(() => {
     if (!client || pushed.current) return;
@@ -25,11 +33,12 @@ function AdUnit() {
     }
   }, [client]);
 
-  // Publisher ID 없을 때만 플레이스홀더
   if (!client) {
     return (
       <div style={{
-        width: "100%", maxWidth: "320px", height: "100px",
+        width: "100%",
+        maxWidth: isRect ? "336px" : "100%",
+        height: minHeight,
         display: "flex", alignItems: "center", justifyContent: "center",
         border: "2px dashed var(--color-senior-border)",
         borderRadius: "0.5rem",
@@ -44,19 +53,23 @@ function AdUnit() {
   return (
     <ins
       className="adsbygoogle"
-      style={{ display: "block", minHeight: "100px" }}
+      style={{ display: "block", minHeight }}
       data-ad-client={client}
       data-ad-slot={slot}
-      data-ad-format="auto"
-      data-full-width-responsive="true"
+      data-ad-format={isRect ? "rectangle" : "horizontal"}
+      data-full-width-responsive={isRect ? "false" : "true"}
     />
   );
 }
 
-export function AdBanner() {
+interface AdBannerProps {
+  variant?: "banner" | "rectangle";
+}
+
+export function AdBanner({ variant = "banner" }: AdBannerProps) {
   return (
     <AdErrorBoundary fallback={<SafeDrivingCard />}>
-      <AdUnit />
+      <AdUnit variant={variant} />
     </AdErrorBoundary>
   );
 }

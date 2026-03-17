@@ -50,7 +50,7 @@ export default function Home() {
       </div>
 
       <div className="mt-8 w-full max-w-sm flex justify-center">
-        <AdBanner />
+        <AdBanner variant="banner" />
       </div>
 
       <p

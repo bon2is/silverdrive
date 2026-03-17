@@ -12,7 +12,7 @@ export default function ResultPage() {
       <p style={{ fontSize: "1.25rem", color: "var(--color-senior-text-muted)" }}>
         결과 리포트는 Phase 4에서 완성됩니다.
       </p>
-      <AdBanner />
+      <AdBanner variant="banner" />
       <Link href="/test" className="btn-senior btn-senior-primary">
         다시 연습하기
       </Link>

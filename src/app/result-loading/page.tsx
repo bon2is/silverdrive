@@ -80,9 +80,13 @@ export default function ResultLoadingPage() {
         </p>
       </div>
 
-      {/* 중앙: 광고 영역 */}
-      <div className="flex w-full justify-center">
-        <AdBanner />
+      {/* 중앙: 광고 영역 (직사각형 300×250) */}
+      <div style={{
+        width: "100%",
+        maxWidth: "336px",
+        margin: "0 auto",
+      }}>
+        <AdBanner variant="rectangle" />
       </div>
 
       {/* 하단: 카운트다운 바 */}
