@@ -79,7 +79,7 @@ export default function SignsTestPage() {
           setRound(next);
           startRound(next);
         }
-      }, 1800);
+      }, 1200);
     },
     [locked, phase, questions, round, addSignAnswer, speak, router, startRound]
   );

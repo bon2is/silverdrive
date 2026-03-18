@@ -68,7 +68,7 @@ export default function ReactionTestPage() {
         setRound(nextRound);
         startRoundRef.current?.();
       }
-    }, 2000);
+    }, 1500);
   };
 
   const startRoundRef = useRef<(() => void) | undefined>(undefined);

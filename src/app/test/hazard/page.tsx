@@ -57,7 +57,7 @@ export default function HazardTestPage() {
         setRound(nextRound);
         startRoundRef.current?.();
       }
-    }, 1500);
+    }, 1000);
   };
 
   const startRoundRef = useRef<(() => void) | undefined>(undefined);
