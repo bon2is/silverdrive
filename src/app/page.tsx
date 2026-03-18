@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AdBanner } from "@/components/AdBanner";
 
 export default function Home() {
   return (
@@ -47,10 +46,6 @@ export default function Home() {
             <p className="font-bold" style={{ fontSize: "1.0625rem" }}>{t.label}</p>
           </div>
         ))}
-      </div>
-
-      <div className="mt-8 w-full max-w-sm flex justify-center">
-        <AdBanner variant="banner" />
       </div>
 
       <p
