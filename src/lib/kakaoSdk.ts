@@ -17,6 +17,7 @@ declare global {
       init: (key: string) => void;
       Share: {
         sendDefault: (settings: KakaoShareSettings) => void;
+        sendScrap:   (settings: KakaoScrapSettings)  => void;
       };
     };
   }
@@ -41,6 +42,11 @@ interface KakaoShareSettings {
   }>;
 }
 
+interface KakaoScrapSettings {
+  requestUrl: string;
+  templateArgs?: Record<string, string>;
+}
+
 export function initKakao(): boolean {
   const key = process.env.NEXT_PUBLIC_KAKAO_JS_APP_KEY;
   if (!key || typeof window === "undefined" || !window.Kakao) return false;
@@ -50,4 +56,4 @@ export function initKakao(): boolean {
   return true;
 }
 
-export type { KakaoShareSettings };
+export type { KakaoShareSettings, KakaoScrapSettings };

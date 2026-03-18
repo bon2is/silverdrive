@@ -38,57 +38,33 @@ export function ShareButton({ grade, total }: ShareButtonProps) {
 
   const emoji = GRADE_EMOJI[grade];
   const label = GRADE_LABEL[grade];
-  const msg   = GRADE_MSG[grade];
 
   const handleSdkLoad = useCallback(() => {
     setKakaoReady(initKakao());
   }, []);
 
-  // ── 카카오 피드 공유 (결과 자랑) ──────────────────────────────
+  // ── 카카오 공유 (sendScrap: OG 태그 기반 — 링크 자동 삽입) ───
+  // sendScrap은 URL의 OG 태그를 카카오가 직접 읽어 카드+링크를 생성.
+  // sendDefault의 buttons 미노출 문제를 근본적으로 우회함.
   const handleKakaoShare = useCallback(() => {
     if (!window.Kakao?.Share) return;
-    window.Kakao.Share.sendDefault({
-      objectType: "feed",
-      content: {
-        title: `${emoji} 나의 운전 적성 점수는 ${total}점 · ${label}`,
-        description: msg,
-        imageUrl: SHARE_IMG,
-        link: { mobileWebUrl: BASE_URL, webUrl: BASE_URL },
-      },
-      buttons: [
-        {
-          title: "나도 검사해보기",
-          link: { mobileWebUrl: BASE_URL, webUrl: BASE_URL },
-        },
-      ],
+    window.Kakao.Share.sendScrap({
+      requestUrl: BASE_URL,
     });
-  }, [emoji, label, msg, total]);
+  }, []);
 
   // ── 친구에게 도전장 ────────────────────────────────────────────
   const handleKakaoChallenge = useCallback(() => {
     if (!window.Kakao?.Share) return;
-    window.Kakao.Share.sendDefault({
-      objectType: "feed",
-      content: {
-        title: `${total}점 받았는데 당신은요? 운전 적성 자가진단 👀`,
-        description:
-          "75세 운전면허 갱신 대비 — 기억력·주의력·반응속도·표지판·위험지각 5가지 무료 검사",
-        imageUrl: SHARE_IMG,
-        link: { mobileWebUrl: BASE_URL, webUrl: BASE_URL },
-      },
-      buttons: [
-        {
-          title: "도전하기",
-          link: { mobileWebUrl: BASE_URL, webUrl: BASE_URL },
-        },
-      ],
+    window.Kakao.Share.sendScrap({
+      requestUrl: BASE_URL,
     });
-  }, [total]);
+  }, []);
 
   // ── Web Share / 클립보드 폴백 ──────────────────────────────────
   const handleNativeShare = useCallback(async () => {
     const text = [
-      `${emoji} 운전 적성 자가진단 결과 — ${total}점 · ${label}`,
+      `${emoji} 운전 적성 자가진단 — ${total}점 · ${label}`,
       ``,
       `🧠 기억력  🔢 주의력  🚦 반응속도`,
       `🪧 표지판  ⚠️ 위험지각`,
