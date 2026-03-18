@@ -13,7 +13,8 @@ export interface ScoreBreakdown {
 }
 
 function calcMemory(r: TestResults): number {
-  return Math.round((r.memoryScore / 6) * 100);
+  if (r.memoryTotal === 0) return 0;
+  return Math.round((r.memoryScore / r.memoryTotal) * 100);
 }
 
 function calcTrail(r: TestResults): number {

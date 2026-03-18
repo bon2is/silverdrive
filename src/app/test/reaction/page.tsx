@@ -6,11 +6,12 @@ import { SpeechGuide } from "@/components/SpeechGuide";
 import { TestProgressBar } from "@/components/TestProgressBar";
 import { useTestStore } from "@/lib/useTestStore";
 import { useSpeech } from "@/lib/useSpeech";
+import { useLevelStore } from "@/lib/useLevelStore";
+import { LEVEL_CONFIGS } from "@/lib/levelConfig";
 
-const TOTAL_ROUNDS = 5;
-const RED_MIN      = 1500;
-const RED_MAX      = 3000;
-const GREEN_LIMIT  = 3000;
+const RED_MIN     = 1500;
+const RED_MAX     = 3000;
+const GREEN_LIMIT = 3000;
 
 type Light   = "red" | "green";
 type Phase   = "guide" | "waiting" | "red" | "green" | "feedback";
@@ -23,6 +24,8 @@ export default function ReactionTestPage() {
   const { speak }          = useSpeech();
   const addReactionTime    = useTestStore((s) => s.addReactionTime);
   const addReactionMistake = useTestStore((s) => s.addReactionMistake);
+  const level              = useLevelStore((s) => s.level);
+  const cfg                = LEVEL_CONFIGS[level];
 
   const [round,    setRound]    = useState(0);
   const [phase,    setPhase]    = useState<Phase>("guide");
@@ -59,7 +62,7 @@ export default function ReactionTestPage() {
     );
     const nextRound = roundRef.current + 1;
     activeTimerRef.current = setTimeout(() => {
-      if (nextRound >= TOTAL_ROUNDS) {
+      if (nextRound >= cfg.reactionRounds) {
         router.push("/test/signs");
       } else {
         setRound(nextRound);
@@ -104,11 +107,11 @@ export default function ReactionTestPage() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <TestProgressBar current={round} total={TOTAL_ROUNDS} label="③ 신호 반응 검사 · 3단계" />
+      <TestProgressBar current={round} total={cfg.reactionRounds} label="③ 신호 반응 검사 · 3단계" />
 
       {phase === "guide" && (
         <div className="flex flex-1 flex-col justify-between px-6 py-4">
-          <SpeechGuide text="초록불이 켜지면 즉시 눌러주세요. 빨간불에는 누르지 마세요. 총 5번 반복합니다." />
+          <SpeechGuide text={`초록불이 켜지면 즉시 눌러주세요. 빨간불에는 누르지 마세요. 총 ${cfg.reactionRounds}번 반복합니다.`} />
           <button onClick={startRound} className="btn-senior btn-senior-primary w-full" style={{ fontSize: "1.375rem" }}>
             시작하기
           </button>
@@ -121,7 +124,6 @@ export default function ReactionTestPage() {
             {phase === "red" ? "🔴 기다려주세요..." : "🟢 지금 누르세요!"}
           </p>
 
-          {/* 신호등 */}
           <div
             style={{
               display:         "flex",

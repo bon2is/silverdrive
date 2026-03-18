@@ -1,18 +1,19 @@
 import { create } from "zustand";
 
 export interface TestResults {
-  memoryScore:      number;    // 기억력: 맞춘 단어 수 (0~6)
+  memoryScore:      number;    // 기억력: 맞춘 단어 수
+  memoryTotal:      number;    // 기억력: 목표 단어 수 (레벨에 따라 다름)
   trailTime:        number;    // 숫자연결: 완료 시간 ms (0 = 미완료)
   trailErrors:      number;    // 숫자연결: 오탭 횟수
-  reactionTimes:    number[];  // 신호반응: 반응 시간 ms (5개)
+  reactionTimes:    number[];  // 신호반응: 반응 시간 ms
   reactionMistakes: number;    // 신호반응: 빨간불 오탭 횟수
-  signAnswers:      boolean[]; // 표지판: 정오답 (5개)
-  hazardAnswers:    boolean[]; // 위험지각: 성공/실패 (3개)
+  signAnswers:      boolean[]; // 표지판: 정오답
+  hazardAnswers:    boolean[]; // 위험지각: 성공/실패
 }
 
 interface TestStore {
   results: TestResults;
-  setMemoryScore:      (score: number) => void;
+  setMemoryScore:      (score: number, total: number) => void;
   setTrailResult:      (time: number, errors: number) => void;
   addReactionTime:     (ms: number) => void;
   addReactionMistake:  () => void;
@@ -23,6 +24,7 @@ interface TestStore {
 
 const emptyResults = (): TestResults => ({
   memoryScore:      0,
+  memoryTotal:      6,
   trailTime:        0,
   trailErrors:      0,
   reactionTimes:    [],
@@ -34,8 +36,8 @@ const emptyResults = (): TestResults => ({
 export const useTestStore = create<TestStore>((set) => ({
   results: emptyResults(),
 
-  setMemoryScore: (score) =>
-    set((s) => ({ results: { ...s.results, memoryScore: score } })),
+  setMemoryScore: (score, total) =>
+    set((s) => ({ results: { ...s.results, memoryScore: score, memoryTotal: total } })),
 
   setTrailResult: (time, errors) =>
     set((s) => ({ results: { ...s.results, trailTime: time, trailErrors: errors } })),

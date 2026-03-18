@@ -51,7 +51,7 @@ export default function ResultPage() {
           icon="🧠"
           label="기억력 검사"
           score={score.memory}
-          sub={`단어 ${results.memoryScore}/6개 정답`}
+          sub={`단어 ${results.memoryScore}/${results.memoryTotal}개 정답`}
         />
         <ScoreCard
           icon="🔢"

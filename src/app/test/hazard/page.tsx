@@ -6,11 +6,11 @@ import { SpeechGuide } from "@/components/SpeechGuide";
 import { TestProgressBar } from "@/components/TestProgressBar";
 import { useTestStore } from "@/lib/useTestStore";
 import { useSpeech } from "@/lib/useSpeech";
+import { useLevelStore } from "@/lib/useLevelStore";
+import { LEVEL_CONFIGS } from "@/lib/levelConfig";
 
-const TOTAL_ROUNDS  = 3;
 const APPEAR_MIN    = 1000;
 const APPEAR_MAX    = 2000;
-const TIMEOUT_MS    = 3000;
 const HIT_RADIUS_PX = 60;
 
 type Phase = "guide" | "waiting" | "active" | "feedback";
@@ -19,12 +19,14 @@ export default function HazardTestPage() {
   const router          = useRouter();
   const { speak }       = useSpeech();
   const addHazardAnswer = useTestStore((s) => s.addHazardAnswer);
+  const level           = useLevelStore((s) => s.level);
+  const cfg             = LEVEL_CONFIGS[level];
 
-  const [round,     setRound]     = useState(0);
-  const [phase,     setPhase]     = useState<Phase>("guide");
-  const [hazardPos, setHazardPos] = useState({ x: 50, y: 50 });
+  const [round,      setRound]      = useState(0);
+  const [phase,      setPhase]      = useState<Phase>("guide");
+  const [hazardPos,  setHazardPos]  = useState({ x: 50, y: 50 });
   const [feedbackOk, setFeedbackOk] = useState(false);
-  const [tapped,    setTapped]    = useState(false);
+  const [tapped,     setTapped]     = useState(false);
 
   const sceneRef       = useRef<HTMLDivElement>(null);
   const delayTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -36,15 +38,9 @@ export default function HazardTestPage() {
     if (activeTimerRef.current) clearTimeout(activeTimerRef.current);
   }, []);
 
-  useEffect(() => {
-    roundRef.current = round;
-  }, [round]);
+  useEffect(() => { roundRef.current = round; }, [round]);
+  useEffect(() => () => clearTimers(), [clearTimers]);
 
-  useEffect(() => {
-    return () => clearTimers();
-  }, [clearTimers]);
-
-  // ref-as-stable-callback 패턴
   const handleResultRef = useRef<((hit: boolean) => void) | undefined>(undefined);
   handleResultRef.current = (hit: boolean) => {
     clearTimers();
@@ -55,7 +51,7 @@ export default function HazardTestPage() {
 
     const nextRound = roundRef.current + 1;
     activeTimerRef.current = setTimeout(() => {
-      if (nextRound >= TOTAL_ROUNDS) {
+      if (nextRound >= cfg.hazardRounds) {
         router.push("/result-loading");
       } else {
         setRound(nextRound);
@@ -74,7 +70,7 @@ export default function HazardTestPage() {
       setPhase("active");
       activeTimerRef.current = setTimeout(
         () => handleResultRef.current?.(false),
-        TIMEOUT_MS
+        cfg.hazardTimeoutMs
       );
     }, delay);
   };
@@ -102,11 +98,11 @@ export default function HazardTestPage() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <TestProgressBar current={round} total={TOTAL_ROUNDS} label="위험 지각 테스트" />
+      <TestProgressBar current={round} total={cfg.hazardRounds} label="위험 지각 테스트" />
 
       {phase === "guide" && (
         <div className="flex flex-1 flex-col justify-between px-6 py-4">
-          <SpeechGuide text="도로에 위험 요소가 나타나면 바로 눌러주세요. 총 3번 반복합니다." />
+          <SpeechGuide text={`도로에 위험 요소가 나타나면 바로 눌러주세요. 총 ${cfg.hazardRounds}번 반복합니다.`} />
           <button
             onClick={startRound}
             className="btn-senior btn-senior-primary w-full"

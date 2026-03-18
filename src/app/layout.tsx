@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import { PwaRegister } from "@/components/PwaRegister";
 
@@ -61,8 +60,6 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
-const adsenseClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT?.trim();
-
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -72,19 +69,7 @@ export default function RootLayout({
         <PwaRegister />
         {children}
 
-        {/* Auto Ads (앵커·전면광고) 비활성화 — adsbygoogle.js 로드 전에 실행 */}
-        {adsenseClient && (
-          <Script src="/ads-config.js" strategy="beforeInteractive" />
-        )}
-
-        {/* AdSense 스크립트 — layout에서 1회만 로드 */}
-        {adsenseClient && (
-          <Script
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`}
-            crossOrigin="anonymous"
-            strategy="afterInteractive"
-          />
-        )}
+        {/* AdSense 스크립트는 광고가 있는 페이지(AdBanner)에서만 개별 로드 */}
       </body>
     </html>
   );

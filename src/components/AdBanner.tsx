@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Script from "next/script";
 import { AdErrorBoundary } from "@/components/AdErrorBoundary";
 import { SafeDrivingCard } from "@/components/SafeDrivingCard";
 
@@ -20,7 +21,7 @@ function AdUnit({ variant = "banner" }: AdUnitProps) {
   const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT?.trim();
   const slot   = process.env.NEXT_PUBLIC_ADSENSE_SLOT?.trim();
 
-  const isRect   = variant === "rectangle";
+  const isRect    = variant === "rectangle";
   const minHeight = isRect ? "250px" : "60px";
 
   useEffect(() => {
@@ -51,14 +52,23 @@ function AdUnit({ variant = "banner" }: AdUnitProps) {
   }
 
   return (
-    <ins
-      className="adsbygoogle"
-      style={{ display: "block", minHeight }}
-      data-ad-client={client}
-      data-ad-slot={slot}
-      data-ad-format={isRect ? "rectangle" : "horizontal"}
-      data-full-width-responsive={isRect ? "false" : "true"}
-    />
+    <>
+      {/* 광고가 있는 페이지에서만 스크립트 로드 (Auto Ads 방지) */}
+      <Script
+        id="adsbygoogle-js"
+        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${client}`}
+        crossOrigin="anonymous"
+        strategy="afterInteractive"
+      />
+      <ins
+        className="adsbygoogle"
+        style={{ display: "block", minHeight }}
+        data-ad-client={client}
+        data-ad-slot={slot}
+        data-ad-format={isRect ? "rectangle" : "horizontal"}
+        data-full-width-responsive={isRect ? "false" : "true"}
+      />
+    </>
   );
 }
 
