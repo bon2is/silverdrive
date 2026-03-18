@@ -8,6 +8,8 @@ import { useTestStore } from "@/lib/useTestStore";
 import { useSpeech } from "@/lib/useSpeech";
 import { useLevelStore } from "@/lib/useLevelStore";
 import { LEVEL_CONFIGS } from "@/lib/levelConfig";
+import { useConfirmLeave } from "@/lib/useConfirmLeave";
+import { LeaveConfirmModal } from "@/components/LeaveConfirmModal";
 
 const APPEAR_MIN    = 1000;
 const APPEAR_MAX    = 2000;
@@ -21,6 +23,7 @@ export default function HazardTestPage() {
   const addHazardAnswer = useTestStore((s) => s.addHazardAnswer);
   const level           = useLevelStore((s) => s.level);
   const cfg             = LEVEL_CONFIGS[level];
+  const { showConfirm, confirmLeave, cancelLeave } = useConfirmLeave();
 
   const [round,      setRound]      = useState(0);
   const [phase,      setPhase]      = useState<Phase>("guide");
@@ -98,6 +101,7 @@ export default function HazardTestPage() {
 
   return (
     <div className="flex min-h-dvh flex-col">
+      {showConfirm && <LeaveConfirmModal onConfirm={confirmLeave} onCancel={cancelLeave} />}
       <TestProgressBar current={round} total={cfg.hazardRounds} label="위험 지각 테스트" />
 
       {phase === "guide" && (

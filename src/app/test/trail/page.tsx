@@ -7,8 +7,9 @@ import { useSpeech } from "@/lib/useSpeech";
 import { useTestStore } from "@/lib/useTestStore";
 import { useLevelStore } from "@/lib/useLevelStore";
 import { LEVEL_CONFIGS } from "@/lib/levelConfig";
+import { useConfirmLeave } from "@/lib/useConfirmLeave";
+import { LeaveConfirmModal } from "@/components/LeaveConfirmModal";
 
-/** 겹치지 않는 랜덤 그리드 위치 생성 */
 function buildPositions(total: number, cols: number, rows: number): { x: number; y: number }[] {
   const cells  = Array.from({ length: cols * rows }, (_, i) => i);
   const picked = cells.sort(() => Math.random() - 0.5).slice(0, total);
@@ -24,6 +25,15 @@ function buildPositions(total: number, cols: number, rows: number): { x: number;
   });
 }
 
+function speedLabel(ms: number, max: number): { text: string; color: string } {
+  // max 기준으로 상대 속도 평가
+  const ratio = ms / (max * 3000); // max 숫자 × 3초 = 기준
+  if (ratio < 0.4) return { text: "매우 빠름 ⚡", color: "var(--color-senior-success)" };
+  if (ratio < 0.65) return { text: "빠름 👍",   color: "var(--color-senior-primary)" };
+  if (ratio < 1.0)  return { text: "보통 😊",   color: "var(--color-senior-text-muted)" };
+  return               { text: "천천히 😌",     color: "#f59e0b" };
+}
+
 type Phase = "guide" | "test" | "done";
 
 export default function TrailTestPage() {
@@ -32,11 +42,13 @@ export default function TrailTestPage() {
   const setTrailResult = useTestStore((s) => s.setTrailResult);
   const level          = useLevelStore((s) => s.level);
   const cfg            = LEVEL_CONFIGS[level];
+  const { showConfirm, confirmLeave, cancelLeave } = useConfirmLeave();
 
-  const [phase,    setPhase]    = useState<Phase>("guide");
-  const [next,     setNext]     = useState(1);
-  const [errors,   setErrors]   = useState(0);
-  const [wrongMsg, setWrongMsg] = useState("");
+  const [phase,     setPhase]     = useState<Phase>("guide");
+  const [next,      setNext]      = useState(1);
+  const [errors,    setErrors]    = useState(0);
+  const [wrongMsg,  setWrongMsg]  = useState("");
+  const [elapsedMs, setElapsedMs] = useState(0);
   const [positions] = useState(() => buildPositions(cfg.trailMax, cfg.trailCols, cfg.trailRows));
 
   const startTimeRef = useRef<number>(0);
@@ -54,10 +66,11 @@ export default function TrailTestPage() {
     if (num === next) {
       if (next === cfg.trailMax) {
         const elapsed = Date.now() - startTimeRef.current;
+        setElapsedMs(elapsed);
         setTrailResult(elapsed, errors);
         setPhase("done");
-        speak("숫자 연결 완료! 잘 하셨습니다.");
-        setTimeout(() => router.push("/test/reaction"), 2000);
+        speak(`숫자 연결 완료! ${(elapsed / 1000).toFixed(1)}초 걸렸습니다.`);
+        setTimeout(() => router.push("/test/reaction"), 3000);
       } else {
         setNext(num + 1);
       }
@@ -70,12 +83,14 @@ export default function TrailTestPage() {
     }
   }, [next, errors, cfg.trailMax, setTrailResult, speak, router]);
 
-  // 숫자 크기: 많을수록 조금 작게
   const numSize = cfg.trailMax <= 8 ? "1.625rem" : cfg.trailMax <= 10 ? "1.5rem" : "1.125rem";
   const btnSize = cfg.trailMax <= 10 ? "70px" : "58px";
+  const speed   = speedLabel(elapsedMs, cfg.trailMax);
 
   return (
     <div className="flex min-h-dvh flex-col">
+      {showConfirm && <LeaveConfirmModal onConfirm={confirmLeave} onCancel={cancelLeave} />}
+
       <div className="sticky top-0 z-10 px-4 py-3" style={{ backgroundColor: "var(--color-senior-bg)" }}>
         <p style={{ fontSize: "1rem", color: "var(--color-senior-text-muted)" }}>
           ② 주의력 검사 (숫자 연결) &nbsp;|&nbsp; 2단계
@@ -110,9 +125,9 @@ export default function TrailTestPage() {
           )}
 
           {positions.map((pos, i) => {
-            const num        = i + 1;
-            const done       = num < next;
-            const isCurrent  = num === next;
+            const num       = i + 1;
+            const done      = num < next;
+            const isCurrent = num === next;
             return (
               <button
                 key={num}
@@ -149,10 +164,33 @@ export default function TrailTestPage() {
       )}
 
       {phase === "done" && (
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6">
+        <div className="flex flex-1 flex-col items-center justify-center gap-5 px-6">
           <span style={{ fontSize: "4rem" }}>✅</span>
           <p style={{ fontSize: "1.75rem", fontWeight: 700 }}>숫자 연결 완료!</p>
-          <p style={{ fontSize: "1.25rem", color: "var(--color-senior-text-muted)" }}>오탭: {errors}회</p>
+
+          {/* 속도 결과 카드 */}
+          <div
+            className="card-senior w-full text-center"
+            style={{ padding: "1.5rem" }}
+          >
+            <p style={{ fontSize: "1rem", color: "var(--color-senior-text-muted)", marginBottom: "0.5rem" }}>
+              완료 시간
+            </p>
+            <p style={{ fontSize: "3rem", fontWeight: 900, color: "var(--color-senior-primary)", lineHeight: 1 }}>
+              {(elapsedMs / 1000).toFixed(2)}
+              <span style={{ fontSize: "1.5rem", fontWeight: 700 }}>초</span>
+            </p>
+            <p style={{ fontSize: "1rem", color: "var(--color-senior-text-muted)", margin: "0.25rem 0 0.75rem" }}>
+              ({elapsedMs.toLocaleString()} ms)
+            </p>
+            <p style={{ fontSize: "1.375rem", fontWeight: 700, color: speed.color }}>
+              {speed.text}
+            </p>
+          </div>
+
+          <p style={{ fontSize: "1.125rem", color: "var(--color-senior-text-muted)" }}>
+            오탭: {errors}회
+          </p>
         </div>
       )}
     </div>

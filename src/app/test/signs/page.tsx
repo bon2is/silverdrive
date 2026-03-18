@@ -10,12 +10,15 @@ import { useSpeech } from "@/lib/useSpeech";
 import { useLevelStore } from "@/lib/useLevelStore";
 import { LEVEL_CONFIGS } from "@/lib/levelConfig";
 import { SIGNS, buildRound, buildQuestions } from "@/lib/signs";
+import { useConfirmLeave } from "@/lib/useConfirmLeave";
+import { LeaveConfirmModal } from "@/components/LeaveConfirmModal";
 
 type Phase = "guide" | "question" | "feedback";
 
 export default function SignsTestPage() {
   const router         = useRouter();
   const { speak }      = useSpeech();
+  const { showConfirm, confirmLeave, cancelLeave } = useConfirmLeave();
   const addSignAnswer  = useTestStore((s) => s.addSignAnswer);
   const level          = useLevelStore((s) => s.level);
   const cfg            = LEVEL_CONFIGS[level];
@@ -90,6 +93,7 @@ export default function SignsTestPage() {
 
   return (
     <div className="flex min-h-dvh flex-col">
+      {showConfirm && <LeaveConfirmModal onConfirm={confirmLeave} onCancel={cancelLeave} />}
       <TestProgressBar current={round} total={questions.length} label="표지판 식별 테스트" />
 
       {phase === "guide" && (

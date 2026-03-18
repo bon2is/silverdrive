@@ -8,11 +8,14 @@ import { useTestStore } from "@/lib/useTestStore";
 import { useLevelStore } from "@/lib/useLevelStore";
 import { LEVEL_CONFIGS } from "@/lib/levelConfig";
 import { buildMemoryRound } from "@/lib/memory";
+import { useConfirmLeave } from "@/lib/useConfirmLeave";
+import { LeaveConfirmModal } from "@/components/LeaveConfirmModal";
 
 type Phase = "guide" | "memorize" | "recall" | "done";
 
 export default function MemoryTestPage() {
   const router         = useRouter();
+  const { showConfirm, confirmLeave, cancelLeave } = useConfirmLeave();
   const { speak }      = useSpeech();
   const setMemoryScore = useTestStore((s) => s.setMemoryScore);
   const level          = useLevelStore((s) => s.level);
@@ -65,6 +68,7 @@ export default function MemoryTestPage() {
 
   return (
     <div className="flex min-h-dvh flex-col px-6 py-4">
+      {showConfirm && <LeaveConfirmModal onConfirm={confirmLeave} onCancel={cancelLeave} />}
       <div
         className="sticky top-0 z-10 py-3"
         style={{ backgroundColor: "var(--color-senior-bg)" }}

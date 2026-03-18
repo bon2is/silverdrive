@@ -8,6 +8,8 @@ import { useTestStore } from "@/lib/useTestStore";
 import { useSpeech } from "@/lib/useSpeech";
 import { useLevelStore } from "@/lib/useLevelStore";
 import { LEVEL_CONFIGS } from "@/lib/levelConfig";
+import { useConfirmLeave } from "@/lib/useConfirmLeave";
+import { LeaveConfirmModal } from "@/components/LeaveConfirmModal";
 
 const RED_MIN     = 1500;
 const RED_MAX     = 3000;
@@ -19,6 +21,13 @@ type Outcome = "success" | "timeout" | "false-start";
 
 interface FeedbackState { outcome: Outcome; ms?: number }
 
+function reactionRating(ms: number): { text: string; color: string } {
+  if (ms < 400)  return { text: "매우 빠름 ⚡", color: "var(--color-senior-success)" };
+  if (ms < 650)  return { text: "빠름 👍",      color: "var(--color-senior-primary)" };
+  if (ms < 1000) return { text: "보통 😊",      color: "var(--color-senior-text-muted)" };
+  return               { text: "천천히 😌",     color: "#f59e0b" };
+}
+
 export default function ReactionTestPage() {
   const router             = useRouter();
   const { speak }          = useSpeech();
@@ -26,6 +35,7 @@ export default function ReactionTestPage() {
   const addReactionMistake = useTestStore((s) => s.addReactionMistake);
   const level              = useLevelStore((s) => s.level);
   const cfg                = LEVEL_CONFIGS[level];
+  const { showConfirm, confirmLeave, cancelLeave } = useConfirmLeave();
 
   const [round,    setRound]    = useState(0);
   const [phase,    setPhase]    = useState<Phase>("guide");
@@ -105,8 +115,13 @@ export default function ReactionTestPage() {
     feedback?.outcome === "false-start" ? "var(--color-senior-danger)"  :
     "var(--color-senior-warning)";
 
+  const rating = feedback?.outcome === "success" && feedback.ms != null
+    ? reactionRating(feedback.ms)
+    : null;
+
   return (
     <div className="flex min-h-dvh flex-col">
+      {showConfirm && <LeaveConfirmModal onConfirm={confirmLeave} onCancel={cancelLeave} />}
       <TestProgressBar current={round} total={cfg.reactionRounds} label="③ 신호 반응 검사 · 3단계" />
 
       {phase === "guide" && (
@@ -173,10 +188,23 @@ export default function ReactionTestPage() {
              feedback.outcome === "false-start" ? "빨간불에 누르셨어요!" :
              "조금 더 빠르게!"}
           </p>
+
+          {/* 반응 시간 + 속도 등급 */}
           {feedback.outcome === "success" && feedback.ms != null && (
-            <p style={{ fontSize: "1.25rem", color: "var(--color-senior-text-muted)" }}>
-              반응 시간: {feedback.ms}ms
-            </p>
+            <div className="card-senior w-full" style={{ padding: "1.25rem" }}>
+              <p style={{ fontSize: "2rem", fontWeight: 900, color: "var(--color-senior-primary)" }}>
+                {feedback.ms}
+                <span style={{ fontSize: "1.1rem", fontWeight: 700 }}> ms</span>
+              </p>
+              <p style={{ fontSize: "1rem", color: "var(--color-senior-text-muted)", margin: "0.2rem 0 0.5rem" }}>
+                ({(feedback.ms / 1000).toFixed(3)}초)
+              </p>
+              {rating && (
+                <p style={{ fontSize: "1.25rem", fontWeight: 700, color: rating.color }}>
+                  {rating.text}
+                </p>
+              )}
+            </div>
           )}
         </div>
       )}
