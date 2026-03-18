@@ -12,13 +12,20 @@ const GRADE_EMOJI: Record<Grade, string> = {
 };
 
 const GRADE_LABEL: Record<Grade, string> = {
-  safe:    "안전",
-  caution: "주의",
-  danger:  "노력 필요",
+  safe:    "안전 운전 가능",
+  caution: "주의 필요",
+  danger:  "집중 연습 필요",
 };
 
-const BASE_URL = "https://silverdrive.andxo.com";
-const OG_IMAGE = `${BASE_URL}/opengraph-image.png`;
+const GRADE_MSG: Record<Grade, string> = {
+  safe:    "5가지 인지능력 검사 모두 통과! 당신도 도전해보세요 🚗",
+  caution: "연습하면 충분히 합격할 수 있어요! 지금 바로 도전해보세요 🚗",
+  danger:  "반복 연습으로 면허 갱신을 준비하세요! 같이 해봐요 🚗",
+};
+
+const BASE_URL  = "https://silverdrive.andxo.com";
+// Next.js opengraph-image 라우트 (확장자 없음) + 정적 앱 이미지 순서로 시도
+const SHARE_IMG = `${BASE_URL}/share-image.png`;
 
 interface ShareButtonProps {
   grade: Grade;
@@ -31,32 +38,31 @@ export function ShareButton({ grade, total }: ShareButtonProps) {
 
   const emoji = GRADE_EMOJI[grade];
   const label = GRADE_LABEL[grade];
+  const msg   = GRADE_MSG[grade];
 
-  // Kakao SDK 스크립트 로드 완료 시점에 정확히 초기화
   const handleSdkLoad = useCallback(() => {
     setKakaoReady(initKakao());
   }, []);
 
-  // ── 카카오 피드 공유 ───────────────────────────────────────────
+  // ── 카카오 피드 공유 (결과 자랑) ──────────────────────────────
   const handleKakaoShare = useCallback(() => {
     if (!window.Kakao?.Share) return;
     window.Kakao.Share.sendDefault({
       objectType: "feed",
       content: {
-        title: `운전 적성 자가진단 결과 ${emoji} ${label} (${total}점)`,
-        description:
-          "75세 운전면허 갱신 대비 — 기억력·주의력·반응속도·표지판·위험지각 5가지 검사를 무료로 연습하세요!",
-        imageUrl: OG_IMAGE,
+        title: `${emoji} 나의 운전 적성 점수는 ${total}점 · ${label}`,
+        description: msg,
+        imageUrl: SHARE_IMG,
         link: { mobileWebUrl: BASE_URL, webUrl: BASE_URL },
       },
       buttons: [
         {
-          title: "나도 해보기 🚗",
+          title: "나도 검사해보기",
           link: { mobileWebUrl: BASE_URL, webUrl: BASE_URL },
         },
       ],
     });
-  }, [emoji, label, total]);
+  }, [emoji, label, msg, total]);
 
   // ── 친구에게 도전장 ────────────────────────────────────────────
   const handleKakaoChallenge = useCallback(() => {
@@ -64,39 +70,37 @@ export function ShareButton({ grade, total }: ShareButtonProps) {
     window.Kakao.Share.sendDefault({
       objectType: "feed",
       content: {
-        title: `나는 ${total}점! 당신도 운전 적성 자가진단 해보세요 👀`,
-        description: `${emoji} ${label} 등급 획득! 5가지 인지능력 검사 — 도전해보세요!`,
-        imageUrl: OG_IMAGE,
+        title: `${total}점 받았는데 당신은요? 운전 적성 자가진단 👀`,
+        description:
+          "75세 운전면허 갱신 대비 — 기억력·주의력·반응속도·표지판·위험지각 5가지 무료 검사",
+        imageUrl: SHARE_IMG,
         link: { mobileWebUrl: BASE_URL, webUrl: BASE_URL },
       },
       buttons: [
         {
-          title: "도전하기 🏆",
+          title: "도전하기",
           link: { mobileWebUrl: BASE_URL, webUrl: BASE_URL },
         },
       ],
     });
-  }, [emoji, label, total]);
+  }, [total]);
 
-  // ── Web Share API / 클립보드 폴백 ─────────────────────────────
+  // ── Web Share / 클립보드 폴백 ──────────────────────────────────
   const handleNativeShare = useCallback(async () => {
     const text = [
-      `나도 해봤어요! 운전 적성 자가진단 결과 🚗`,
-      ``,
-      `${emoji} ${label} 등급 (종합 ${total}점)`,
+      `${emoji} 운전 적성 자가진단 결과 — ${total}점 · ${label}`,
       ``,
       `🧠 기억력  🔢 주의력  🚦 반응속도`,
       `🪧 표지판  ⚠️ 위험지각`,
       `5가지 검사를 무료로 연습할 수 있어요!`,
       ``,
       `👉 ${BASE_URL}`,
-      ``,
       `#운전면허갱신 #75세적성검사 #실버드라이브`,
     ].join("\n");
 
     if (navigator.share) {
       try { await navigator.share({ title: "실버드라이브 자가진단", text }); }
-      catch { /* 사용자 취소 */ }
+      catch { /* 취소 */ }
     } else {
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -106,7 +110,6 @@ export function ShareButton({ grade, total }: ShareButtonProps) {
 
   return (
     <>
-      {/* Kakao SDK — 결과 페이지 진입 즉시 afterInteractive로 로드 */}
       <Script
         src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
         strategy="afterInteractive"
@@ -115,45 +118,45 @@ export function ShareButton({ grade, total }: ShareButtonProps) {
       />
 
       <div className="space-y-3">
-        {/* 결과 공유 버튼 */}
+        {/* 결과 공유 */}
         <button
           onClick={kakaoReady ? handleKakaoShare : handleNativeShare}
           className="btn-senior w-full"
           style={{
             fontSize:        "1.25rem",
-            backgroundColor: kakaoReady ? "#FEE500" : "var(--color-senior-border)",
-            color:           kakaoReady ? "#191600" : "var(--color-senior-primary)",
+            fontWeight:      900,
+            backgroundColor: "#FEE500",
+            color:           "#191600",
+            display:         "flex",
+            alignItems:      "center",
+            justifyContent:  "center",
+            gap:             "0.625rem",
+            boxShadow:       "0 4px 12px rgba(254,229,0,0.4)",
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/kakao-logo.svg" alt="" width={26} height={26} style={{ flexShrink: 0 }} />
+          {copied ? "✅ 클립보드에 복사됐어요!" : "카카오톡으로 결과 공유하기"}
+        </button>
+
+        {/* 도전장 */}
+        <button
+          onClick={kakaoReady ? handleKakaoChallenge : handleNativeShare}
+          className="btn-senior w-full"
+          style={{
+            fontSize:        "1.125rem",
+            fontWeight:      900,
+            backgroundColor: "#1a1a2e",
+            color:           "#FEE500",
+            border:          "2px solid #FEE500",
             display:         "flex",
             alignItems:      "center",
             justifyContent:  "center",
             gap:             "0.5rem",
           }}
         >
-          {kakaoReady && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src="/kakao-logo.svg" alt="" width={24} height={24} style={{ flexShrink: 0 }} />
-          )}
-          {copied ? "✅ 클립보드에 복사됐어요!" : "카카오톡으로 결과 공유하기"}
+          🏆 친구에게 도전장 보내기
         </button>
-
-        {/* 친구에게 도전장 — Kakao SDK 준비 완료 후만 표시 */}
-        {kakaoReady && (
-          <button
-            onClick={handleKakaoChallenge}
-            className="btn-senior w-full"
-            style={{
-              fontSize:        "1.125rem",
-              backgroundColor: "#3A1D1D",
-              color:           "#FEE500",
-              display:         "flex",
-              alignItems:      "center",
-              justifyContent:  "center",
-              gap:             "0.5rem",
-            }}
-          >
-            친구에게 도전장 보내기 🏆
-          </button>
-        )}
       </div>
     </>
   );

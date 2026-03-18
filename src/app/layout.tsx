@@ -41,13 +41,13 @@ export const metadata: Metadata = {
     title: "실버드라이브 - 75세 운전면허 갱신 인지능력검사 무료 연습",
     description:
       "실제 적성검사와 동일한 5가지 인지능력 검사를 무료로 연습하세요. 부모님께 보내드리세요.",
-    images: [{ url: "/opengraph-image.png", width: 1200, height: 630, alt: "실버드라이브" }],
+    images: [{ url: "/share-image.png", width: 1200, height: 630, alt: "실버드라이브" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "실버드라이브 - 운전면허 갱신 인지능력검사 무료 연습",
     description: "75세 이상 면허 갱신 대상자를 위한 무료 자가진단 연습 서비스",
-    images: ["/opengraph-image.png"],
+    images: ["/share-image.png"],
   },
   alternates: { canonical: BASE_URL },
 };
