@@ -1,11 +1,35 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Home() {
   return (
-    <main className="flex min-h-dvh flex-col items-center px-6 py-10">
-      {/* Logo / Title */}
-      <div className="mb-8 text-center">
-        <div className="mb-3 text-6xl">🚗</div>
+    <main className="flex min-h-dvh flex-col items-center px-6 py-8">
+
+      {/* 히어로 이미지 */}
+      <div
+        style={{
+          width:        "200px",
+          height:       "200px",
+          borderRadius: "50%",
+          overflow:     "hidden",
+          marginBottom: "1.25rem",
+          boxShadow:    "0 8px 32px rgba(245,197,24,0.35)",
+          border:       "4px solid #f5c518",
+          flexShrink:   0,
+        }}
+      >
+        <Image
+          src="/app-icon.png"
+          alt="실버드라이브 캐릭터"
+          width={200}
+          height={200}
+          style={{ objectFit: "cover", width: "100%", height: "100%" }}
+          priority
+        />
+      </div>
+
+      {/* 타이틀 */}
+      <div className="mb-6 text-center">
         <h1
           className="mb-2 font-black leading-tight no-select"
           style={{ fontSize: "2.25rem", color: "var(--color-senior-primary)" }}
@@ -20,7 +44,7 @@ export default function Home() {
         </p>
       </div>
 
-      {/* CTA — 화면 상단 가까이 크게 배치 */}
+      {/* CTA */}
       <Link
         href="/test"
         className="btn-senior btn-senior-primary w-full max-w-sm text-center"
@@ -29,7 +53,7 @@ export default function Home() {
         전체 검사 시작하기
       </Link>
 
-      {/* Info cards */}
+      {/* 검사 항목 */}
       <div className="mt-8 w-full max-w-sm space-y-3">
         <p className="font-bold text-center" style={{ fontSize: "1rem", color: "var(--color-senior-text-muted)" }}>
           검사 항목
