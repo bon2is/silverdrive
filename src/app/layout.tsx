@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import { PwaRegister } from "@/components/PwaRegister";
 
@@ -71,13 +70,7 @@ export default function RootLayout({
         {children}
 
         {/* AdSense 스크립트는 광고가 있는 페이지(AdBanner)에서만 개별 로드 */}
-
-        {/* Kakao JavaScript SDK — 공유 기능에 사용, 페이지 콘텐츠 이후 로드 */}
-        <Script
-          src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
-          strategy="lazyOnload"
-          crossOrigin="anonymous"
-        />
+        {/* Kakao SDK는 ShareButton 컴포넌트에서 afterInteractive로 직접 로드 */}
       </body>
     </html>
   );
