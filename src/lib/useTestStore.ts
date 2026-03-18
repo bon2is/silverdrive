@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 export interface TestResults {
   memoryScore:      number;    // 기억력: 맞춘 단어 수
@@ -33,26 +34,34 @@ const emptyResults = (): TestResults => ({
   hazardAnswers:    [],
 });
 
-export const useTestStore = create<TestStore>((set) => ({
-  results: emptyResults(),
+export const useTestStore = create<TestStore>()(
+  persist(
+    (set) => ({
+      results: emptyResults(),
 
-  setMemoryScore: (score, total) =>
-    set((s) => ({ results: { ...s.results, memoryScore: score, memoryTotal: total } })),
+      setMemoryScore: (score, total) =>
+        set((s) => ({ results: { ...s.results, memoryScore: score, memoryTotal: total } })),
 
-  setTrailResult: (time, errors) =>
-    set((s) => ({ results: { ...s.results, trailTime: time, trailErrors: errors } })),
+      setTrailResult: (time, errors) =>
+        set((s) => ({ results: { ...s.results, trailTime: time, trailErrors: errors } })),
 
-  addReactionTime: (ms) =>
-    set((s) => ({ results: { ...s.results, reactionTimes: [...s.results.reactionTimes, ms] } })),
+      addReactionTime: (ms) =>
+        set((s) => ({ results: { ...s.results, reactionTimes: [...s.results.reactionTimes, ms] } })),
 
-  addReactionMistake: () =>
-    set((s) => ({ results: { ...s.results, reactionMistakes: s.results.reactionMistakes + 1 } })),
+      addReactionMistake: () =>
+        set((s) => ({ results: { ...s.results, reactionMistakes: s.results.reactionMistakes + 1 } })),
 
-  addSignAnswer: (correct) =>
-    set((s) => ({ results: { ...s.results, signAnswers: [...s.results.signAnswers, correct] } })),
+      addSignAnswer: (correct) =>
+        set((s) => ({ results: { ...s.results, signAnswers: [...s.results.signAnswers, correct] } })),
 
-  addHazardAnswer: (hit) =>
-    set((s) => ({ results: { ...s.results, hazardAnswers: [...s.results.hazardAnswers, hit] } })),
+      addHazardAnswer: (hit) =>
+        set((s) => ({ results: { ...s.results, hazardAnswers: [...s.results.hazardAnswers, hit] } })),
 
-  reset: () => set({ results: emptyResults() }),
-}));
+      reset: () => set({ results: emptyResults() }),
+    }),
+    {
+      name: "silverdrive-test-results",   // sessionStorage 키
+      storage: createJSONStorage(() => sessionStorage),
+    }
+  )
+);
