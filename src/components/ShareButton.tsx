@@ -17,8 +17,7 @@ const GRADE_LABEL: Record<Grade, string> = {
   danger:  "집중 연습 필요",
 };
 
-const BASE_URL  = "https://silverdrive.andxo.com";
-const SHARE_IMG = `${BASE_URL}/share-image.png`;
+const BASE_URL = "https://silverdrive.andxo.com";
 
 interface ShareButtonProps {
   grade: Grade;
@@ -72,33 +71,22 @@ export function ShareButton({ grade, total }: ShareButtonProps) {
     }
   }, [emoji, label, total]);
 
-  // ── 카카오 공유 (sendDefault: feed 카드) ──────────────────────
-  // content.link + 명시적 buttons 둘 다 설정.
-  // Kakao 팝업 차단 or SDK 오류 시 → native share 자동 폴백.
+  // ── 카카오 공유 (sendScrap: OG 태그 기반) ────────────────────
+  // Kakao 서버가 BASE_URL을 크롤링해 og:title/og:image/og:url로 카드 생성.
+  // 링크는 og:url 기반으로 Kakao가 자동 삽입 → 탭 시 반드시 동작.
+  // OG 이미지: /share-image.png (정적 파일, 크롤러 접근 가능)
   const handleKakaoShare = useCallback(() => {
     if (!window.Kakao?.Share) {
       handleNativeShare();
       return;
     }
-    const link = { mobileWebUrl: BASE_URL, webUrl: BASE_URL };
     try {
-      window.Kakao.Share.sendDefault({
-        objectType: "feed",
-        content: {
-          title: `${emoji} 실버드라이브 ${total}점 · ${label}`,
-          description: "75세 이상 운전면허 갱신 인지능력검사 무료 연습 — 5가지 검사를 지금 바로 도전해보세요!",
-          imageUrl: SHARE_IMG,
-          link,
-        },
-        buttons: [
-          { title: "결과 보러가기", link },
-        ],
-      });
+      window.Kakao.Share.sendScrap({ requestUrl: BASE_URL });
     } catch {
       setKakaoError(true);
       handleNativeShare();
     }
-  }, [emoji, label, total, handleNativeShare]);
+  }, [handleNativeShare]);
 
   // ── 친구에게 도전장 ────────────────────────────────────────────
   const handleKakaoChallenge = useCallback(() => {
@@ -106,20 +94,8 @@ export function ShareButton({ grade, total }: ShareButtonProps) {
       handleNativeShare();
       return;
     }
-    const link = { mobileWebUrl: BASE_URL, webUrl: BASE_URL };
     try {
-      window.Kakao.Share.sendDefault({
-        objectType: "feed",
-        content: {
-          title: "실버드라이브 — 나도 도전해봐! 🚗",
-          description: "75세 운전면허 갱신 인지능력검사 무료 연습. 5가지 검사로 미리 준비하세요.",
-          imageUrl: SHARE_IMG,
-          link,
-        },
-        buttons: [
-          { title: "나도 도전하기", link },
-        ],
-      });
+      window.Kakao.Share.sendScrap({ requestUrl: BASE_URL });
     } catch {
       setKakaoError(true);
       handleNativeShare();
