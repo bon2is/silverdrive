@@ -12,15 +12,32 @@ export function ScoreCard({ icon, label, score, sub }: ScoreCardProps) {
     "var(--color-senior-danger)";
 
   return (
-    <div className="card-senior flex items-center gap-4">
-      <span style={{ fontSize: "2rem", flexShrink: 0 }}>{icon}</span>
-      <div className="flex-1 min-w-0">
-        <p style={{ fontSize: "1.0625rem", fontWeight: 700 }}>{label}</p>
-        {sub && (
-          <p style={{ fontSize: "0.9rem", color: "var(--color-senior-text-muted)" }}>{sub}</p>
-        )}
+    <div className="card-senior" style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        <span style={{ fontSize: "1.75rem", flexShrink: 0 }}>{icon}</span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: "1.0625rem", fontWeight: 700 }}>{label}</p>
+          {sub && (
+            <p style={{ fontSize: "0.875rem", color: "var(--color-senior-text-muted)" }}>{sub}</p>
+          )}
+        </div>
+        <p style={{ fontSize: "1.5rem", fontWeight: 900, color, flexShrink: 0 }}>{score}점</p>
       </div>
-      <p style={{ fontSize: "1.625rem", fontWeight: 900, color, flexShrink: 0 }}>{score}점</p>
+      {/* 점수 바 */}
+      <div style={{
+        height:          "10px",
+        borderRadius:    "99px",
+        backgroundColor: "var(--color-senior-border)",
+        overflow:        "hidden",
+      }}>
+        <div style={{
+          height:          "100%",
+          width:           `${score}%`,
+          borderRadius:    "99px",
+          backgroundColor: color,
+          transition:      "width 0.6s ease",
+        }} />
+      </div>
     </div>
   );
 }

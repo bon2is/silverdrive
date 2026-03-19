@@ -16,6 +16,15 @@ const GRADE_LABEL: Record<string, string> = {
   danger:  "노력 필요",
 };
 
+// 점수 60점 미만인 항목에 대한 맞춤 조언
+const ADVICE: Record<string, { icon: string; title: string; tip: string }> = {
+  memory:   { icon: "🧠", title: "기억력",   tip: "단어를 소리 내어 읽고 눈을 감고 떠올리는 연습을 매일 해보세요." },
+  trail:    { icon: "🔢", title: "주의력",   tip: "숫자를 순서대로 빠르게 따라가는 연습이 도움돼요. 신문의 숫자 찾기도 좋아요." },
+  reaction: { icon: "🚦", title: "반응속도", tip: "화면에 무언가 나타나면 즉시 누르는 연습을 반복해보세요." },
+  signs:    { icon: "🪧", title: "표지판",   tip: "실제 도로 운전 시 표지판을 보며 이름을 말하는 습관을 들여보세요." },
+  hazard:   { icon: "⚠️", title: "위험지각", tip: "도로에서 위험 요소를 미리 예측하는 방어 운전 습관이 중요해요." },
+};
+
 function fmtMs(ms: number) {
   return ms >= 1000 ? `${(ms / 1000).toFixed(1)}초` : `${ms}ms`;
 }
@@ -82,6 +91,48 @@ export default function ResultPage() {
           sub={`${results.hazardAnswers.filter(Boolean).length}/${results.hazardAnswers.length}회 인식`}
         />
       </div>
+
+      {/* 맞춤 조언 — 60점 미만 항목만 표시 */}
+      {(() => {
+        const weak = (
+          [
+            ["memory",   score.memory],
+            ["trail",    score.trail],
+            ["reaction", score.reaction],
+            ["signs",    score.signs],
+            ["hazard",   score.hazard],
+          ] as [string, number][]
+        ).filter(([, s]) => s < 60);
+
+        if (weak.length === 0) return null;
+
+        return (
+          <div style={{
+            background:   "var(--color-senior-surface)",
+            borderRadius: "1rem",
+            padding:      "1.25rem",
+            border:       "1px solid var(--color-senior-border)",
+          }}>
+            <p style={{ fontSize: "1rem", fontWeight: 700, color: "var(--color-senior-warning)", marginBottom: "1rem" }}>
+              📋 이렇게 연습해보세요
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+              {weak.map(([key]) => {
+                const a = ADVICE[key];
+                return (
+                  <div key={key} style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
+                    <span style={{ fontSize: "1.5rem", flexShrink: 0, marginTop: "0.1rem" }}>{a.icon}</span>
+                    <div>
+                      <p style={{ fontWeight: 700, fontSize: "1rem" }}>{a.title}</p>
+                      <p style={{ fontSize: "0.9375rem", color: "var(--color-senior-text-muted)", lineHeight: 1.6 }}>{a.tip}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* 액션 버튼 */}
       <div className="space-y-3">
