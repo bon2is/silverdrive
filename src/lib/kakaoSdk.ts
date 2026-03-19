@@ -36,7 +36,7 @@ interface KakaoShareSettings {
     imageUrl: string;
     link: KakaoLink;
   };
-  buttons: Array<{
+  buttons?: Array<{
     title: string;
     link: KakaoLink;
   }>;

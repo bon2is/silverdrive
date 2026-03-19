@@ -43,21 +43,35 @@ export function ShareButton({ grade, total }: ShareButtonProps) {
     setKakaoReady(initKakao());
   }, []);
 
-  // ── 카카오 공유 (sendScrap: OG 태그 기반 — 링크 자동 삽입) ───
-  // sendScrap은 URL의 OG 태그를 카카오가 직접 읽어 카드+링크를 생성.
-  // sendDefault의 buttons 미노출 문제를 근본적으로 우회함.
+  // ── 카카오 공유 (sendDefault: feed 카드 — content.link로 링크 삽입) ──
+  // buttons는 비즈앱 전용이라 일반 앱에선 미노출.
+  // 카드 이미지/제목 탭 시 content.link가 열리므로 버튼 없이도 링크 동작.
   const handleKakaoShare = useCallback(() => {
     if (!window.Kakao?.Share) return;
-    window.Kakao.Share.sendScrap({
-      requestUrl: BASE_URL,
+    const link = { mobileWebUrl: BASE_URL, webUrl: BASE_URL };
+    window.Kakao.Share.sendDefault({
+      objectType: "feed",
+      content: {
+        title: `${emoji} 실버드라이브 ${total}점 · ${label}`,
+        description: "75세 이상 운전면허 갱신 인지능력검사 무료 연습 — 5가지 검사를 지금 바로 도전해보세요!",
+        imageUrl: SHARE_IMG,
+        link,
+      },
     });
-  }, []);
+  }, [emoji, label, total]);
 
   // ── 친구에게 도전장 ────────────────────────────────────────────
   const handleKakaoChallenge = useCallback(() => {
     if (!window.Kakao?.Share) return;
-    window.Kakao.Share.sendScrap({
-      requestUrl: BASE_URL,
+    const link = { mobileWebUrl: BASE_URL, webUrl: BASE_URL };
+    window.Kakao.Share.sendDefault({
+      objectType: "feed",
+      content: {
+        title: "실버드라이브 — 나도 도전해봐! 🚗",
+        description: "75세 운전면허 갱신 인지능력검사 무료 연습. 5가지 검사로 미리 준비하세요.",
+        imageUrl: SHARE_IMG,
+        link,
+      },
     });
   }, []);
 
