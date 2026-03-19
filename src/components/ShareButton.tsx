@@ -17,14 +17,7 @@ const GRADE_LABEL: Record<Grade, string> = {
   danger:  "집중 연습 필요",
 };
 
-const GRADE_MSG: Record<Grade, string> = {
-  safe:    "5가지 인지능력 검사 모두 통과! 당신도 도전해보세요 🚗",
-  caution: "연습하면 충분히 합격할 수 있어요! 지금 바로 도전해보세요 🚗",
-  danger:  "반복 연습으로 면허 갱신을 준비하세요! 같이 해봐요 🚗",
-};
-
 const BASE_URL  = "https://silverdrive.andxo.com";
-// Next.js opengraph-image 라우트 (확장자 없음) + 정적 앱 이미지 순서로 시도
 const SHARE_IMG = `${BASE_URL}/share-image.png`;
 
 interface ShareButtonProps {
@@ -35,6 +28,7 @@ interface ShareButtonProps {
 export function ShareButton({ grade, total }: ShareButtonProps) {
   const [copied, setCopied]         = useState(false);
   const [kakaoReady, setKakaoReady] = useState(false);
+  const [kakaoError, setKakaoError] = useState(false);
 
   const emoji = GRADE_EMOJI[grade];
   const label = GRADE_LABEL[grade];
@@ -43,39 +37,7 @@ export function ShareButton({ grade, total }: ShareButtonProps) {
     setKakaoReady(initKakao());
   }, []);
 
-  // ── 카카오 공유 (sendDefault: feed 카드 — content.link로 링크 삽입) ──
-  // buttons는 비즈앱 전용이라 일반 앱에선 미노출.
-  // 카드 이미지/제목 탭 시 content.link가 열리므로 버튼 없이도 링크 동작.
-  const handleKakaoShare = useCallback(() => {
-    if (!window.Kakao?.Share) return;
-    const link = { mobileWebUrl: BASE_URL, webUrl: BASE_URL };
-    window.Kakao.Share.sendDefault({
-      objectType: "feed",
-      content: {
-        title: `${emoji} 실버드라이브 ${total}점 · ${label}`,
-        description: "75세 이상 운전면허 갱신 인지능력검사 무료 연습 — 5가지 검사를 지금 바로 도전해보세요!",
-        imageUrl: SHARE_IMG,
-        link,
-      },
-    });
-  }, [emoji, label, total]);
-
-  // ── 친구에게 도전장 ────────────────────────────────────────────
-  const handleKakaoChallenge = useCallback(() => {
-    if (!window.Kakao?.Share) return;
-    const link = { mobileWebUrl: BASE_URL, webUrl: BASE_URL };
-    window.Kakao.Share.sendDefault({
-      objectType: "feed",
-      content: {
-        title: "실버드라이브 — 나도 도전해봐! 🚗",
-        description: "75세 운전면허 갱신 인지능력검사 무료 연습. 5가지 검사로 미리 준비하세요.",
-        imageUrl: SHARE_IMG,
-        link,
-      },
-    });
-  }, []);
-
-  // ── Web Share / 클립보드 폴백 ──────────────────────────────────
+  // ── Web Share / 클립보드 폴백 (항상 먼저 정의) ────────────────
   const handleNativeShare = useCallback(async () => {
     const text = [
       `${emoji} 운전 적성 자가진단 — ${total}점 · ${label}`,
@@ -89,14 +51,94 @@ export function ShareButton({ grade, total }: ShareButtonProps) {
     ].join("\n");
 
     if (navigator.share) {
-      try { await navigator.share({ title: "실버드라이브 자가진단", text }); }
-      catch { /* 취소 */ }
+      try {
+        await navigator.share({ title: "실버드라이브 자가진단", text, url: BASE_URL });
+      } catch (e) {
+        // AbortError(취소)는 무시, 그 외는 클립보드로 재시도
+        if (e instanceof Error && e.name !== "AbortError") {
+          try {
+            await navigator.clipboard.writeText(`${text}`);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2500);
+          } catch { /* clipboard도 실패 시 무시 */ }
+        }
+      }
     } else {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      try {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      } catch { /* 권한 없을 시 무시 */ }
     }
   }, [emoji, label, total]);
+
+  // ── 카카오 공유 (sendDefault: feed 카드) ──────────────────────
+  // content.link + 명시적 buttons 둘 다 설정.
+  // Kakao 팝업 차단 or SDK 오류 시 → native share 자동 폴백.
+  const handleKakaoShare = useCallback(() => {
+    if (!window.Kakao?.Share) {
+      handleNativeShare();
+      return;
+    }
+    const link = { mobileWebUrl: BASE_URL, webUrl: BASE_URL };
+    try {
+      window.Kakao.Share.sendDefault({
+        objectType: "feed",
+        content: {
+          title: `${emoji} 실버드라이브 ${total}점 · ${label}`,
+          description: "75세 이상 운전면허 갱신 인지능력검사 무료 연습 — 5가지 검사를 지금 바로 도전해보세요!",
+          imageUrl: SHARE_IMG,
+          link,
+        },
+        buttons: [
+          { title: "결과 보러가기", link },
+        ],
+      });
+    } catch {
+      setKakaoError(true);
+      handleNativeShare();
+    }
+  }, [emoji, label, total, handleNativeShare]);
+
+  // ── 친구에게 도전장 ────────────────────────────────────────────
+  const handleKakaoChallenge = useCallback(() => {
+    if (!window.Kakao?.Share) {
+      handleNativeShare();
+      return;
+    }
+    const link = { mobileWebUrl: BASE_URL, webUrl: BASE_URL };
+    try {
+      window.Kakao.Share.sendDefault({
+        objectType: "feed",
+        content: {
+          title: "실버드라이브 — 나도 도전해봐! 🚗",
+          description: "75세 운전면허 갱신 인지능력검사 무료 연습. 5가지 검사로 미리 준비하세요.",
+          imageUrl: SHARE_IMG,
+          link,
+        },
+        buttons: [
+          { title: "나도 도전하기", link },
+        ],
+      });
+    } catch {
+      setKakaoError(true);
+      handleNativeShare();
+    }
+  }, [handleNativeShare]);
+
+  const shareLabel = copied
+    ? "✅ 클립보드에 복사됐어요!"
+    : kakaoError
+      ? "링크 복사하기"
+      : "카카오톡으로 결과 공유하기";
+
+  const handleShareClick = kakaoReady && !kakaoError
+    ? handleKakaoShare
+    : handleNativeShare;
+
+  const handleChallengeClick = kakaoReady && !kakaoError
+    ? handleKakaoChallenge
+    : handleNativeShare;
 
   return (
     <>
@@ -105,12 +147,13 @@ export function ShareButton({ grade, total }: ShareButtonProps) {
         strategy="afterInteractive"
         crossOrigin="anonymous"
         onLoad={handleSdkLoad}
+        onError={() => setKakaoReady(false)}
       />
 
       <div className="space-y-3">
         {/* 결과 공유 */}
         <button
-          onClick={kakaoReady ? handleKakaoShare : handleNativeShare}
+          onClick={handleShareClick}
           className="btn-senior w-full"
           style={{
             fontSize:        "1.25rem",
@@ -125,13 +168,13 @@ export function ShareButton({ grade, total }: ShareButtonProps) {
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/kakao-logo.svg" alt="" width={26} height={26} style={{ flexShrink: 0 }} />
-          {copied ? "✅ 클립보드에 복사됐어요!" : "카카오톡으로 결과 공유하기"}
+          {!kakaoError && <img src="/kakao-logo.svg" alt="" width={26} height={26} style={{ flexShrink: 0 }} />}
+          {shareLabel}
         </button>
 
         {/* 도전장 */}
         <button
-          onClick={kakaoReady ? handleKakaoChallenge : handleNativeShare}
+          onClick={handleChallengeClick}
           className="btn-senior w-full"
           style={{
             fontSize:        "1.125rem",
