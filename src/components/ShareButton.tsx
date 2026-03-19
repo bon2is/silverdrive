@@ -39,14 +39,17 @@ export function ShareButton({ grade, total }: ShareButtonProps) {
   // ── Web Share / 클립보드 폴백 (항상 먼저 정의) ────────────────
   const handleNativeShare = useCallback(async () => {
     const text = [
-      `${emoji} 운전 적성 자가진단 — ${total}점 · ${label}`,
+      `실버드라이브 — 운전 적성 자가진단 - 나도 해봤어요!`,
+      `운전 적성 자가진단 결과 🚗`,
+      ``,
+      `${emoji} ${label} (종합 ${total}점)`,
       ``,
       `🧠 기억력  🔢 주의력  🚦 반응속도`,
       `🪧 표지판  ⚠️ 위험지각`,
       `5가지 검사를 무료로 연습할 수 있어요!`,
       ``,
       `👉 ${BASE_URL}`,
-      `#운전면허갱신 #75세적성검사 #실버드라이브`,
+      `#운전면허갱신 #75세적성검사 #실버드라이브 #고령운전자`,
     ].join("\n");
 
     if (navigator.share) {

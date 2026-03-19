@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTestStore } from "@/lib/useTestStore";
 import { calcScore } from "@/lib/gradeCalculator";
 import { GradeBadge } from "@/components/GradeBadge";
@@ -29,10 +29,53 @@ function fmtMs(ms: number) {
   return ms >= 1000 ? `${(ms / 1000).toFixed(1)}초` : `${ms}ms`;
 }
 
+const BASE_URL = "https://silverdrive.andxo.com";
+
+const GRADE_EMOJI_MAP: Record<string, string> = {
+  safe: "🟢", caution: "🟡", danger: "🔴",
+};
+const GRADE_LABEL_SHARE: Record<string, string> = {
+  safe: "안전 등급", caution: "주의 등급", danger: "집중 연습 등급",
+};
+
 export default function ResultPage() {
   const results = useTestStore((s) => s.results);
   const { speak } = useSpeech();
   const score = calcScore(results);
+  const [copied, setCopied] = useState(false);
+
+  const handleNativeShare = useCallback(async () => {
+    const emoji = GRADE_EMOJI_MAP[score.grade];
+    const label = GRADE_LABEL_SHARE[score.grade];
+    const text = [
+      `실버드라이브 — 운전 적성 자가진단 - 나도 해봤어요!`,
+      `운전 적성 자가진단 결과 🚗`,
+      ``,
+      `${emoji} ${label} (종합 ${score.total}점)`,
+      ``,
+      `🧠 기억력  🔢 주의력  🚦 반응속도`,
+      `🪧 표지판  ⚠️ 위험지각`,
+      `5가지 검사를 무료로 연습할 수 있어요!`,
+      ``,
+      `👉 ${BASE_URL}`,
+      `#운전면허갱신 #75세적성검사 #실버드라이브 #고령운전자`,
+    ].join("\n");
+
+    if (navigator.share) {
+      try { await navigator.share({ title: "실버드라이브 자가진단", text, url: BASE_URL }); }
+      catch (e) {
+        if (e instanceof Error && e.name !== "AbortError") {
+          await navigator.clipboard.writeText(text).catch(() => {});
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2500);
+        }
+      }
+    } else {
+      await navigator.clipboard.writeText(text).catch(() => {});
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  }, [score.grade, score.total]);
 
   // 평균 반응속도 계산 (표시용)
   const avgReaction = results.reactionTimes.length > 0
@@ -137,6 +180,23 @@ export default function ResultPage() {
       {/* 액션 버튼 */}
       <div className="space-y-3">
         <ShareButton grade={score.grade} total={score.total} />
+        <button
+          onClick={handleNativeShare}
+          className="btn-senior w-full"
+          style={{
+            fontSize:        "1.125rem",
+            fontWeight:      700,
+            backgroundColor: "var(--color-senior-surface)",
+            color:           "var(--color-senior-text)",
+            border:          "1px solid var(--color-senior-border)",
+            display:         "flex",
+            alignItems:      "center",
+            justifyContent:  "center",
+            gap:             "0.5rem",
+          }}
+        >
+          {copied ? "✅ 복사됐어요!" : "🔗 다른 방법으로 공유하기"}
+        </button>
         <Link
           href="/test"
           className="btn-senior btn-senior-primary w-full text-center"

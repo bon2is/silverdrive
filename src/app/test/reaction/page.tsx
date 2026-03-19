@@ -15,8 +15,7 @@ const RED_MIN     = 1500;
 const RED_MAX     = 3000;
 const GREEN_LIMIT = 3000;
 
-type Light   = "red" | "green";
-type Phase   = "guide" | "waiting" | "red" | "green" | "feedback";
+type Phase = "guide" | "waiting" | "red" | "green" | "feedback";
 type Outcome = "success" | "timeout" | "false-start";
 
 interface FeedbackState { outcome: Outcome; ms?: number }
@@ -44,6 +43,7 @@ export default function ReactionTestPage() {
 
   const startTimeRef   = useRef<number>(0);
   const roundRef       = useRef(0);
+  const phaseRef       = useRef<Phase>("guide");
   const delayTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -53,6 +53,7 @@ export default function ReactionTestPage() {
   }, []);
 
   useEffect(() => { roundRef.current = round; }, [round]);
+  useEffect(() => { phaseRef.current = phase; }, [phase]);
   useEffect(() => () => clearTimers(), [clearTimers]);
 
   const handleResultRef = useRef<((outcome: Outcome, ms?: number) => void) | undefined>(undefined);
@@ -99,14 +100,18 @@ export default function ReactionTestPage() {
 
   const startRound = useCallback(() => startRoundRef.current?.(), []);
 
-  const handleTap = useCallback((light: Light) => {
+  // phase 기준으로 판정 — 어떤 원을 탭했는지와 무관하게
+  // 빨간불 중 초록 원 탭 → false-start 방지
+  const handleTap = useCallback(() => {
     if (tapped) return;
+    const currentPhase = phaseRef.current;
+    if (currentPhase !== "red" && currentPhase !== "green") return;
     setTapped(true);
-    if (light === "red") {
-      handleResultRef.current?.("false-start");
-    } else {
+    if (currentPhase === "green") {
       const ms = Date.now() - startTimeRef.current;
       handleResultRef.current?.("success", ms);
+    } else {
+      handleResultRef.current?.("false-start");
     }
   }, [tapped]);
 
@@ -158,7 +163,7 @@ export default function ReactionTestPage() {
               return (
                 <button
                   key={color}
-                  onClick={() => handleTap(color === "green" ? "green" : "red")}
+                  onClick={handleTap}
                   disabled={tapped}
                   aria-label={color === "green" ? "초록불 누르기" : "신호등"}
                   style={{

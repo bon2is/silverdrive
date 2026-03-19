@@ -21,7 +21,7 @@ function calcTrail(r: TestResults): number {
   if (r.trailTime === 0) return 0;
   const secs = r.trailTime / 1000;
   // 30초 이하=100, 120초=0, 선형 감소
-  const base = Math.max(0, Math.round(100 - ((secs - 30) / 90) * 100));
+  const base = Math.min(100, Math.max(0, Math.round(100 - ((secs - 30) / 90) * 100)));
   return Math.max(0, base - r.trailErrors * 10);
 }
 

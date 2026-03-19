@@ -150,19 +150,48 @@ export default function HazardTestPage() {
           {phase === "active" && (
             <div
               role="img"
-              aria-label="위험 요소"
+              aria-label="위험 요소 — 보행자"
               style={{
                 position:  "absolute",
                 left:      `${hazardPos.x}%`,
                 top:       `${hazardPos.y}%`,
                 transform: "translate(-50%, -50%)",
-                fontSize:  "4rem",
                 userSelect:"none",
-                filter:    "drop-shadow(0 0 8px rgba(255,50,50,0.9))",
                 animation: "pulse 0.5s ease-in-out infinite alternate",
+                display:   "flex",
+                flexDirection: "column",
+                alignItems:    "center",
+                gap:           "4px",
               }}
             >
-              🚶
+              {/* 경고 배경 원 */}
+              <div style={{
+                width:           "72px",
+                height:          "72px",
+                borderRadius:    "50%",
+                backgroundColor: "rgba(255, 255, 255, 0.95)",
+                border:          "4px solid #e53935",
+                display:         "flex",
+                alignItems:      "center",
+                justifyContent:  "center",
+                fontSize:        "2.5rem",
+                boxShadow:       "0 0 24px rgba(229,57,53,0.9), 0 0 48px rgba(229,57,53,0.4)",
+              }}>
+                🧍
+              </div>
+              {/* 위험 라벨 */}
+              <div style={{
+                backgroundColor: "#e53935",
+                color:           "#fff",
+                fontSize:        "0.75rem",
+                fontWeight:      900,
+                padding:         "2px 8px",
+                borderRadius:    "99px",
+                whiteSpace:      "nowrap",
+                letterSpacing:   "0.05em",
+              }}>
+                위험!
+              </div>
             </div>
           )}
         </div>
