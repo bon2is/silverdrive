@@ -5,11 +5,14 @@ import { useRouter } from "next/navigation";
 import { AdBanner } from "@/components/AdBanner";
 import { useSpeech } from "@/lib/useSpeech";
 
-const TOTAL_SEC = 5;
+const TOTAL_SEC = 15;
 
 const ANALYSIS_MSGS = [
   "어르신의 반응 속도를 분석하고 있습니다...",
+  "기억력 검사 결과를 계산하고 있습니다...",
   "표지판 인식 능력을 평가하고 있습니다...",
+  "주의력 및 집중력을 분석하고 있습니다...",
+  "위험 지각 능력을 평가하고 있습니다...",
   "종합 결과를 정리하고 있습니다...",
 ];
 
@@ -36,10 +39,10 @@ export default function ResultLoadingPage() {
       }
     }, 100);
 
-    // 분석 문구 순환 (1.5초 간격)
+    // 분석 문구 순환 (2.5초 간격 — 15초 / 6개 메시지)
     msgTimerRef.current = setInterval(() => {
       setMsgIdx((prev) => (prev + 1) % ANALYSIS_MSGS.length);
-    }, 1500);
+    }, 2500);
 
     return () => {
       clearInterval(intervalRef.current!);

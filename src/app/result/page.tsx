@@ -1,14 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTestStore } from "@/lib/useTestStore";
 import { calcScore } from "@/lib/gradeCalculator";
 import { GradeBadge } from "@/components/GradeBadge";
 import { ScoreCard } from "@/components/ScoreCard";
 import { ShareButton } from "@/components/ShareButton";
+import { ReminderButton } from "@/components/ReminderButton";
 import { AdBanner } from "@/components/AdBanner";
+import { HistorySection } from "@/components/HistorySection";
 import { useSpeech } from "@/lib/useSpeech";
+import { saveTestRecord } from "@/lib/testHistory";
 
 const GRADE_LABEL: Record<string, string> = {
   safe:    "안전",
@@ -30,6 +33,7 @@ function fmtMs(ms: number) {
 }
 
 const BASE_URL = "https://silverdrive.andxo.com";
+const PARENT_URL = `${BASE_URL}?utm_source=kakao&utm_medium=parent`;
 
 const GRADE_EMOJI_MAP: Record<string, string> = {
   safe: "🟢", caution: "🟡", danger: "🔴",
@@ -43,26 +47,28 @@ export default function ResultPage() {
   const { speak } = useSpeech();
   const score = calcScore(results);
   const [copied, setCopied] = useState(false);
+  const [parentCopied, setParentCopied] = useState(false);
 
   const handleNativeShare = useCallback(async () => {
     const emoji = GRADE_EMOJI_MAP[score.grade];
     const label = GRADE_LABEL_SHARE[score.grade];
+    const resultUrl = `${BASE_URL}?utm_source=kakao&utm_medium=share&utm_campaign=result`;
     const text = [
-      `실버드라이브 — 운전 적성 자가진단 - 나도 해봤어요!`,
-      `운전 적성 자가진단 결과 🚗`,
+      `나는 ${label}! 어르신 운전 적성 자가진단`,
+      `종합 ${score.total}점 나왔어요 🚗 ${emoji}`,
       ``,
-      `${emoji} ${label} (종합 ${score.total}점)`,
+      `75세 갱신 전에 한 번 연습해보세요 👇`,
       ``,
       `🧠 기억력  🔢 주의력  🚦 반응속도`,
       `🪧 표지판  ⚠️ 위험지각`,
-      `5가지 검사를 무료로 연습할 수 있어요!`,
+      `5가지 검사 무료!`,
       ``,
-      `👉 ${BASE_URL}`,
+      `👉 ${resultUrl}`,
       `#운전면허갱신 #75세적성검사 #실버드라이브 #고령운전자`,
     ].join("\n");
 
     if (navigator.share) {
-      try { await navigator.share({ title: "실버드라이브 자가진단", text, url: BASE_URL }); }
+      try { await navigator.share({ title: "실버드라이브 자가진단", text, url: resultUrl }); }
       catch (e) {
         if (e instanceof Error && e.name !== "AbortError") {
           await navigator.clipboard.writeText(text).catch(() => {});
@@ -77,10 +83,52 @@ export default function ResultPage() {
     }
   }, [score.grade, score.total]);
 
+  const handleParentShare = useCallback(async () => {
+    const text = [
+      `어머니/아버지, 75세 운전면허 갱신 전에`,
+      `이 연습 한번 해보세요. 무료예요 😊`,
+      ``,
+      `기억력·주의력·반응속도·표지판·위험지각`,
+      `5가지 인지능력 자가진단!`,
+      ``,
+      `👉 ${PARENT_URL}`,
+    ].join("\n");
+
+    if (window.Kakao?.Share) {
+      try {
+        window.Kakao.Share.sendScrap({ requestUrl: PARENT_URL });
+        return;
+      } catch { /* 폴백 */ }
+    }
+    if (navigator.share) {
+      try { await navigator.share({ title: "실버드라이브 — 부모님께", text, url: PARENT_URL }); return; }
+      catch (e) {
+        if (e instanceof Error && e.name === "AbortError") return;
+      }
+    }
+    await navigator.clipboard.writeText(text).catch(() => {});
+    setParentCopied(true);
+    setTimeout(() => setParentCopied(false), 2500);
+  }, []);
+
   // 평균 반응속도 계산 (표시용)
   const avgReaction = results.reactionTimes.length > 0
     ? Math.round(results.reactionTimes.reduce((a, b) => a + b, 0) / results.reactionTimes.length)
     : 0;
+
+  // 결과 자동 저장 (최초 1회)
+  const savedRef = useRef(false);
+  useEffect(() => {
+    if (savedRef.current || score.total === 0) return;
+    savedRef.current = true;
+    saveTestRecord(score.total, score.grade, {
+      memory:   score.memory,
+      trail:    score.trail,
+      reaction: score.reaction,
+      signs:    score.signs,
+      hazard:   score.hazard,
+    });
+  }, [score]);
 
   useEffect(() => {
     speak(`검사 결과입니다. 종합 ${score.total}점, ${GRADE_LABEL[score.grade]} 등급입니다.`);
@@ -204,7 +252,42 @@ export default function ResultPage() {
         >
           다시 연습하기
         </Link>
+        <ReminderButton />
       </div>
+
+      {/* 부모님께 보내기 섹션 */}
+      <div style={{
+        borderRadius: "1rem",
+        border:       "2px dashed var(--color-senior-border)",
+        padding:      "1.25rem",
+        textAlign:    "center",
+      }}>
+        <p style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.25rem" }}>
+          부모님이 걱정되신다면?
+        </p>
+        <p style={{ fontSize: "0.9375rem", color: "var(--color-senior-text-muted)", marginBottom: "1rem" }}>
+          카카오톡으로 바로 전달하세요
+        </p>
+        <button
+          onClick={handleParentShare}
+          className="btn-senior w-full"
+          style={{
+            fontSize:        "1.125rem",
+            fontWeight:      900,
+            backgroundColor: "#FEE500",
+            color:           "#191600",
+            display:         "flex",
+            alignItems:      "center",
+            justifyContent:  "center",
+            gap:             "0.5rem",
+          }}
+        >
+          {parentCopied ? "✅ 링크 복사됐어요!" : "👴👵 부모님께 링크 보내기"}
+        </button>
+      </div>
+
+      {/* 내 검사 기록 (2회차부터 표시, 선택적 카카오 이름 저장) */}
+      <HistorySection />
 
       {/* 광고 */}
       <div className="flex justify-center pb-4">

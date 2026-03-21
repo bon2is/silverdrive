@@ -21,11 +21,18 @@ const svgMap: Record<string, (size: number) => ReactNode> = {
   ),
   "crosswalk": (s) => (
     <svg width={s} height={s} viewBox="0 0 100 100" aria-hidden="true">
-      <polygon points="50,4 96,96 4,96" fill="#fff" stroke="#e53935" strokeWidth="6" />
-      <circle cx="50" cy="42" r="8" fill="#333" />
-      <line x1="50" y1="50" x2="50" y2="72" stroke="#333" strokeWidth="6" strokeLinecap="round" />
-      <line x1="50" y1="58" x2="38" y2="70" stroke="#333" strokeWidth="5" strokeLinecap="round" />
-      <line x1="50" y1="58" x2="62" y2="70" stroke="#333" strokeWidth="5" strokeLinecap="round" />
+      {/* 파란 직사각형 배경 (한국 횡단보도 표지 표준) */}
+      <rect x="3" y="3" width="94" height="94" rx="8" fill="#1565c0" />
+      {/* 보행자 그림 */}
+      <circle cx="50" cy="20" r="7" fill="#fff" />
+      <line x1="50" y1="27" x2="50" y2="50" stroke="#fff" strokeWidth="6" strokeLinecap="round" />
+      <line x1="50" y1="38" x2="38" y2="50" stroke="#fff" strokeWidth="5" strokeLinecap="round" />
+      <line x1="50" y1="38" x2="62" y2="50" stroke="#fff" strokeWidth="5" strokeLinecap="round" />
+      <line x1="50" y1="50" x2="41" y2="67" stroke="#fff" strokeWidth="5" strokeLinecap="round" />
+      <line x1="50" y1="50" x2="59" y2="67" stroke="#fff" strokeWidth="5" strokeLinecap="round" />
+      {/* 횡단보도 줄무늬 */}
+      <rect x="16" y="76" width="68" height="8" rx="2" fill="#fff" />
+      <rect x="16" y="88" width="68" height="7" rx="2" fill="#fff" opacity="0.6" />
     </svg>
   ),
   "traffic-light": (s) => (
@@ -79,9 +86,12 @@ const svgMap: Record<string, (size: number) => ReactNode> = {
   "no-uturn": (s) => (
     <svg width={s} height={s} viewBox="0 0 100 100" aria-hidden="true">
       <circle cx="50" cy="50" r="48" fill="#fff" stroke="#e53935" strokeWidth="8" />
-      <path d="M35,65 Q35,30 65,30 Q80,30 80,45 L80,65" stroke="#333" strokeWidth="7" fill="none" strokeLinecap="round" />
-      <polygon points="70,60 80,74 90,60" fill="#333" />
-      <line x1="20" y1="20" x2="80" y2="80" stroke="#e53935" strokeWidth="8" strokeLinecap="round" />
+      {/* 유턴 화살표: 좌측 아래 출발 → 위로 → 오른쪽 호 → 우측 아래 복귀 (U자형) */}
+      <path d="M30,70 L30,40 Q30,16 55,16 Q78,16 78,40 L78,70"
+        stroke="#333" strokeWidth="7" fill="none" strokeLinecap="round" />
+      {/* 화살촉: 우측 아래 끝에서 아래 방향 */}
+      <polygon points="68,64 78,80 88,64" fill="#333" />
+      <line x1="20" y1="20" x2="80" y2="80" stroke="#e53935" strokeWidth="9" strokeLinecap="round" />
     </svg>
   ),
   "no-overtaking": (s) => (
@@ -113,9 +123,12 @@ const svgMap: Record<string, (size: number) => ReactNode> = {
   "no-left-turn": (s) => (
     <svg width={s} height={s} viewBox="0 0 100 100" aria-hidden="true">
       <circle cx="50" cy="50" r="48" fill="#fff" stroke="#e53935" strokeWidth="8" />
-      <path d="M65,70 L65,40 Q65,25 50,25 Q35,25 35,40 L35,55" stroke="#333" strokeWidth="7" fill="none" strokeLinecap="round" />
-      <polygon points="25,50 35,62 45,50" fill="#333" />
-      <line x1="20" y1="20" x2="80" y2="80" stroke="#e53935" strokeWidth="8" strokeLinecap="round" />
+      {/* 좌회전 화살표: 아래에서 위로 직선 → 90도 꺾여 왼쪽 (L자형, U자형과 명확히 구분) */}
+      <line x1="63" y1="78" x2="63" y2="34" stroke="#333" strokeWidth="7" strokeLinecap="round" />
+      <line x1="63" y1="34" x2="20" y2="34" stroke="#333" strokeWidth="7" strokeLinecap="round" />
+      {/* 화살촉: 왼쪽 방향 */}
+      <polygon points="13,34 28,24 28,44" fill="#333" />
+      <line x1="20" y1="20" x2="80" y2="80" stroke="#e53935" strokeWidth="9" strokeLinecap="round" />
     </svg>
   ),
   "roundabout": (s) => (
