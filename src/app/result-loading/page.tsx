@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { AdBanner } from "@/components/AdBanner";
 import { useSpeech } from "@/lib/useSpeech";
 
-const TOTAL_SEC = 15;
+const TOTAL_SEC = 10;
 
 const ANALYSIS_MSGS = [
   "어르신의 반응 속도를 분석하고 있습니다...",
