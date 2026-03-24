@@ -3,6 +3,7 @@ import { Noto_Sans_KR } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { PwaRegister } from "@/components/PwaRegister";
+import { JsonLd } from "@/components/JsonLd";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
@@ -25,8 +26,10 @@ export const metadata: Metadata = {
     "75세 운전면허 갱신 걱정되시나요? 실제 적성검사와 동일한 기억력·주의력·반응속도·표지판·위험지각 5가지 검사를 무료로 연습하세요. 부모님께 보내드리세요.",
   keywords: [
     "75세 운전면허 갱신", "고령 운전자 적성검사", "인지능력검사 연습",
-    "운전면허 갱� 연습", "노인 운전면허", "적성검사 자가진단",
+    "운전면허 갱신 연습", "노인 운전면허", "적성검사 자가진단",
     "실버드라이브", "운전 인지능력", "고령자 운전 테스트",
+    "75세 적성검사", "운전면허 갱신 테스트", "고령자 인지검사",
+    "운전 적성검사 연습", "면허 갱신 준비", "노인 인지능력 검사",
   ],
   manifest: "/manifest.json",
   appleWebApp: {
@@ -53,6 +56,13 @@ export const metadata: Metadata = {
     images: ["/share-image.png"],
   },
   alternates: { canonical: BASE_URL },
+  // 검색엔진 인증 메타태그 — 각 Search Console에서 발급받은 코드를 환경변수에 입력
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    other: {
+      "naver-site-verification": process.env.NEXT_PUBLIC_NAVER_SITE_VERIFICATION ?? "",
+    },
+  },
 };
 
 export const viewport: Viewport = {
@@ -70,6 +80,7 @@ export default function RootLayout({
     <html lang="ko" className={notoSansKR.variable}>
       <body className="antialiased">
         <PwaRegister />
+        <JsonLd />
         {children}
 
         {/* Google Analytics 4 — NEXT_PUBLIC_GA_ID 없으면 비로드 */}
