@@ -65,7 +65,7 @@ function AdUnit({ variant = "banner" }: AdUnitProps) {
         style={{ display: "block", minHeight }}
         data-ad-client={client}
         data-ad-slot={slot}
-        data-ad-format={isRect ? "rectangle" : "horizontal"}
+        data-ad-format={isRect ? "rectangle" : "auto"}
         data-full-width-responsive={isRect ? "false" : "true"}
       />
     </>

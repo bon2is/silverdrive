@@ -19,6 +19,19 @@ const GRADE_LABEL: Record<Grade, string> = {
 
 const BASE_URL = "https://silverdrive.andxo.com";
 
+// /share 페이지 — 서버 렌더링 + generateMetadata로 점수별 동적 OG 이미지 제공
+// sendScrap이 이 URL을 크롤링 → 카카오 카드에 실제 점수/등급 이미지 노출
+function makeShareUrl(grade: Grade, total: number) {
+  return `${BASE_URL}/share?grade=${grade}&score=${total}&utm_source=kakao&utm_medium=share&utm_campaign=result`;
+}
+function makeChallengeUrl(grade: Grade, total: number) {
+  return `${BASE_URL}/share?grade=${grade}&score=${total}&utm_source=kakao&utm_medium=challenge`;
+}
+
+// 네이티브 공유용 UTM URL (카카오 크롤러 불필요)
+const RESULT_URL_BASE   = `${BASE_URL}?utm_source=kakao&utm_medium=share&utm_campaign=result`;
+const CHALLENGE_URL_BASE = `${BASE_URL}?utm_source=kakao&utm_medium=challenge`;
+
 interface ShareButtonProps {
   grade: Grade;
   total: number;
@@ -39,22 +52,22 @@ export function ShareButton({ grade, total }: ShareButtonProps) {
   // ── Web Share / 클립보드 폴백 (항상 먼저 정의) ────────────────
   const handleNativeShare = useCallback(async () => {
     const text = [
-      `실버드라이브 — 운전 적성 자가진단 - 나도 해봤어요!`,
-      `운전 적성 자가진단 결과 🚗`,
+      `나는 ${label}! 어르신 운전 적성 자가진단`,
+      `종합 ${total}점 나왔어요 🚗`,
       ``,
-      `${emoji} ${label} (종합 ${total}점)`,
+      `75세 갱신 전에 한 번 연습해보세요 👇`,
       ``,
       `🧠 기억력  🔢 주의력  🚦 반응속도`,
       `🪧 표지판  ⚠️ 위험지각`,
-      `5가지 검사를 무료로 연습할 수 있어요!`,
+      `5가지 검사 무료!`,
       ``,
-      `👉 ${BASE_URL}`,
+      `👉 ${RESULT_URL_BASE}`,
       `#운전면허갱신 #75세적성검사 #실버드라이브 #고령운전자`,
     ].join("\n");
 
     if (navigator.share) {
       try {
-        await navigator.share({ title: "실버드라이브 자가진단", text, url: BASE_URL });
+        await navigator.share({ title: "실버드라이브 자가진단", text, url: RESULT_URL_BASE });
       } catch (e) {
         // AbortError(취소)는 무시, 그 외는 클립보드로 재시도
         if (e instanceof Error && e.name !== "AbortError") {
@@ -72,19 +85,18 @@ export function ShareButton({ grade, total }: ShareButtonProps) {
         setTimeout(() => setCopied(false), 2500);
       } catch { /* 권한 없을 시 무시 */ }
     }
-  }, [emoji, label, total]);
+  }, [label, total]);
 
   // ── 카카오 공유 (sendScrap: OG 태그 기반) ────────────────────
-  // Kakao 서버가 BASE_URL을 크롤링해 og:title/og:image/og:url로 카드 생성.
-  // 링크는 og:url 기반으로 Kakao가 자동 삽입 → 탭 시 반드시 동작.
-  // OG 이미지: /share-image.png (정적 파일, 크롤러 접근 가능)
+  // Kakao 서버가 RESULT_URL을 크롤링해 og:title/og:image/og:url로 카드 생성.
+  // UTM 파라미터는 GA4 채널별 유입 트래킹에 사용됨.
   const handleKakaoShare = useCallback(() => {
     if (!window.Kakao?.Share) {
       handleNativeShare();
       return;
     }
     try {
-      window.Kakao.Share.sendScrap({ requestUrl: BASE_URL });
+      window.Kakao.Share.sendScrap({ requestUrl: makeShareUrl(grade, total) });
     } catch {
       setKakaoError(true);
       handleNativeShare();
@@ -92,18 +104,45 @@ export function ShareButton({ grade, total }: ShareButtonProps) {
   }, [handleNativeShare]);
 
   // ── 친구에게 도전장 ────────────────────────────────────────────
+  const handleChallengeNativeShare = useCallback(async () => {
+    const text = [
+      `나는 ${total}점 나왔는데, 당신은요? 🏆`,
+      `75세 운전면허 갱신 인지능력 자가진단`,
+      `같이 해봐요 👇`,
+      ``,
+      `👉 ${CHALLENGE_URL_BASE}`,
+      `#운전면허갱신 #75세적성검사 #실버드라이브`,
+    ].join("\n");
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "실버드라이브 도전장", text, url: CHALLENGE_URL_BASE });
+      } catch (e) {
+        if (e instanceof Error && e.name !== "AbortError") {
+          await navigator.clipboard.writeText(text).catch(() => {});
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2500);
+        }
+      }
+    } else {
+      await navigator.clipboard.writeText(text).catch(() => {});
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  }, [total]);
+
   const handleKakaoChallenge = useCallback(() => {
     if (!window.Kakao?.Share) {
-      handleNativeShare();
+      handleChallengeNativeShare();
       return;
     }
     try {
-      window.Kakao.Share.sendScrap({ requestUrl: BASE_URL });
+      window.Kakao.Share.sendScrap({ requestUrl: makeChallengeUrl(grade, total) });
     } catch {
       setKakaoError(true);
-      handleNativeShare();
+      handleChallengeNativeShare();
     }
-  }, [handleNativeShare]);
+  }, [handleChallengeNativeShare]);
 
   const shareLabel = copied
     ? "✅ 클립보드에 복사됐어요!"
@@ -117,7 +156,7 @@ export function ShareButton({ grade, total }: ShareButtonProps) {
 
   const handleChallengeClick = kakaoReady && !kakaoError
     ? handleKakaoChallenge
-    : handleNativeShare;
+    : handleChallengeNativeShare;
 
   return (
     <>
@@ -167,7 +206,7 @@ export function ShareButton({ grade, total }: ShareButtonProps) {
             gap:             "0.5rem",
           }}
         >
-          🏆 친구에게 도전장 보내기
+          🏆 &ldquo;나는 {total}점, 당신은요?&rdquo; 도전장 보내기
         </button>
       </div>
     </>
