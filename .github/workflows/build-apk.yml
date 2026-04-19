@@ -1,0 +1,78 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - claude/android-admob-distribution-ny6si
+  workflow_dispatch:  # 수동 실행 가능
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. 코드 체크아웃 ──────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Node.js 환경 설정 ──────────────────────────────────
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ── 3. Next.js 정적 빌드 (Capacitor용) ───────────────────
+      - name: Build Next.js static export
+        run: npm run build:app
+        env:
+          NODE_ENV: production
+          NEXT_PUBLIC_ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
+          NEXT_PUBLIC_ADMOB_BANNER_ID: ${{ secrets.ADMOB_BANNER_ID }}
+          NEXT_PUBLIC_ADMOB_REWARD_ID: ${{ secrets.ADMOB_REWARD_ID }}
+
+      # ── 4. Java 설정 ─────────────────────────────────────────
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      # ── 5. Android SDK 설정 ───────────────────────────────────
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK platform 35 + build-tools
+        run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+
+      # ── 6. Capacitor 동기화 ───────────────────────────────────
+      - name: Sync Capacitor web assets to Android
+        run: npx cap sync android
+
+      # ── 7. Gradle 빌드 ────────────────────────────────────────
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --no-daemon
+        working-directory: android
+
+      # ── 8. APK 업로드 (Actions Artifact) ─────────────────────
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: silverdrive-debug-${{ github.run_number }}
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+
+      - name: APK build summary
+        run: |
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          SIZE=$(du -h $APK | cut -f1)
+          echo "## APK 빌드 완료" >> $GITHUB_STEP_SUMMARY
+          echo "- 파일: app-debug.apk ($SIZE)" >> $GITHUB_STEP_SUMMARY
+          echo "- Actions > Artifacts 탭에서 다운로드하세요" >> $GITHUB_STEP_SUMMARY
