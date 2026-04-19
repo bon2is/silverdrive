@@ -5,34 +5,36 @@ on:
     branches:
       - main
       - claude/android-admob-distribution-ny6si
-  workflow_dispatch:  # 수동 실행 가능
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # ── 1. 코드 체크아웃 ──────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ── 2. Java 먼저 설정 (Gradle이 필요하기 때문에 앞에 위치) ──
+      # ── Java ──────────────────────────────────────────────────
       - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
 
-      # ── 3. Android SDK 설정 ───────────────────────────────────
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install SDK platform 35 + build-tools
+      # ── Android SDK (ubuntu-latest 사전 설치 SDK 활용) ─────────
+      - name: Setup Android SDK platform 35
         run: |
-          sdkmanager --install "platforms;android-35" "build-tools;35.0.0" "platform-tools"
-          echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls $ANDROID_HOME/cmdline-tools/ || true
+          # License 동의
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
+          # Platform 35 + build-tools 설치
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-35" "build-tools;35.0.0"
+          # Gradle이 SDK를 찾을 수 있도록 local.properties 생성
+          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
 
-      # ── 4. Node.js 환경 설정 ──────────────────────────────────
+      # ── Node.js / Next.js 빌드 ─────────────────────────────────
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -42,7 +44,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # ── 5. Next.js 정적 빌드 (Capacitor용) ───────────────────
       - name: Build Next.js static export
         run: npm run build:app
         env:
@@ -51,10 +52,8 @@ jobs:
           NEXT_PUBLIC_ADMOB_BANNER_ID: ${{ secrets.ADMOB_BANNER_ID }}
           NEXT_PUBLIC_ADMOB_REWARD_ID: ${{ secrets.ADMOB_REWARD_ID }}
 
-      # ── 6. 웹 에셋 + Capacitor 설정 파일 생성 ─────────────────
-      # android/.gitignore가 assets/public, capacitor.config.json 등을 제외하므로
-      # CI에서는 디렉토리부터 생성 후 직접 복사해야 함
-      - name: Copy web assets and generate Capacitor configs
+      # ── Web assets + Capacitor 설정 파일 생성 ─────────────────
+      - name: Copy web assets and Capacitor configs
         run: |
           mkdir -p android/app/src/main/assets
           rm -rf android/app/src/main/assets/public
@@ -68,17 +67,15 @@ jobs:
           echo '[{"pkg":"@capacitor-community/admob","classpath":"com.getcapacitor.community.admob.AdMob"}]' \
             > android/app/src/main/assets/capacitor.plugins.json
 
-      # ── 7. Gradle 빌드 ────────────────────────────────────────
+      # ── Gradle 빌드 ───────────────────────────────────────────
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
       - name: Build debug APK
-        run: ./gradlew assembleDebug --no-daemon
+        run: ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee /tmp/gradle-output.txt; exit ${PIPESTATUS[0]}
         working-directory: android
-        env:
-          ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
 
-      # ── 8. APK 업로드 (Actions Artifact) ─────────────────────
+      # ── APK 업로드 ────────────────────────────────────────────
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
@@ -86,7 +83,16 @@ jobs:
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
 
+      - name: Upload Gradle log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-log-${{ github.run_number }}
+          path: /tmp/gradle-output.txt
+          retention-days: 7
+
       - name: APK build summary
+        if: success()
         run: |
           APK=android/app/build/outputs/apk/debug/app-debug.apk
           SIZE=$(du -h $APK | cut -f1)
