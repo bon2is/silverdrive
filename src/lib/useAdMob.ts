@@ -1,10 +1,10 @@
 import { Capacitor } from "@capacitor/core";
 
 // Google 공식 테스트 광고 단위 ID (개발/테스트 환경 전용)
-const TEST_BANNER_ID        = "ca-app-pub-3940256099942544/6300978111";
-const TEST_INTERSTITIAL_ID  = "ca-app-pub-3940256099942544/1033173712";
+const TEST_BANNER_ID = "ca-app-pub-3940256099942544/6300978111";
+const TEST_REWARD_ID = "ca-app-pub-3940256099942544/5354046379";
 
-const isNative = () => Capacitor.isNativePlatform();
+const isNative  = () => Capacitor.isNativePlatform();
 const isTesting = () => process.env.NODE_ENV !== "production";
 
 function getBannerId(): string {
@@ -13,10 +13,10 @@ function getBannerId(): string {
     : (process.env.NEXT_PUBLIC_ADMOB_BANNER_ID ?? "");
 }
 
-function getInterstitialId(): string {
+function getRewardId(): string {
   return isTesting()
-    ? TEST_INTERSTITIAL_ID
-    : (process.env.NEXT_PUBLIC_ADMOB_INTERSTITIAL_ID ?? "");
+    ? TEST_REWARD_ID
+    : (process.env.NEXT_PUBLIC_ADMOB_REWARD_ID ?? "");
 }
 
 export async function initAdMob(): Promise<void> {
@@ -44,21 +44,17 @@ export async function hideBanner(): Promise<void> {
   await AdMob.hideBanner();
 }
 
-// sessionStorage 플래그로 세션당 1회만 전면광고 노출
-const INTERSTITIAL_KEY = "admob_interstitial_shown";
-
-export async function showInterstitialOnce(): Promise<void> {
-  if (!isNative()) return;
-  if (typeof sessionStorage !== "undefined" && sessionStorage.getItem(INTERSTITIAL_KEY)) return;
-
-  const adId = getInterstitialId();
-  if (!adId) return;
-
-  const { AdMob } = await import("@capacitor-community/admob");
-  await AdMob.prepareInterstitial({ adId, isTesting: isTesting() });
-  await AdMob.showInterstitial();
-
-  if (typeof sessionStorage !== "undefined") {
-    sessionStorage.setItem(INTERSTITIAL_KEY, "1");
+// 사용자가 직접 클릭해서 시청하는 리워드 광고
+export async function showRewardAd(): Promise<boolean> {
+  if (!isNative()) return false;
+  const adId = getRewardId();
+  if (!adId) return false;
+  try {
+    const { AdMob } = await import("@capacitor-community/admob");
+    await AdMob.prepareRewardVideoAd({ adId, isTesting: isTesting() });
+    const result = await AdMob.showRewardVideoAd();
+    return !!result;
+  } catch {
+    return false;
   }
 }

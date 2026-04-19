@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTestStore } from "@/lib/useTestStore";
 import { calcScore } from "@/lib/gradeCalculator";
 import { GradeBadge } from "@/components/GradeBadge";
@@ -12,7 +13,8 @@ import { AdBanner } from "@/components/AdBanner";
 import { HistorySection } from "@/components/HistorySection";
 import { useSpeech } from "@/lib/useSpeech";
 import { saveTestRecord } from "@/lib/testHistory";
-import { showBottomBanner, hideBanner } from "@/lib/useAdMob";
+import { showBottomBanner, hideBanner, showRewardAd } from "@/lib/useAdMob";
+import { Capacitor } from "@capacitor/core";
 
 const GRADE_LABEL: Record<string, string> = {
   safe:    "안전",
@@ -44,10 +46,12 @@ const GRADE_LABEL_SHARE: Record<string, string> = {
 };
 
 export default function ResultPage() {
-  const results = useTestStore((s) => s.results);
+  const results  = useTestStore((s) => s.results);
   const { speak } = useSpeech();
-  const score = calcScore(results);
-  const [copied, setCopied] = useState(false);
+  const router   = useRouter();
+  const score    = calcScore(results);
+  const [copied, setCopied]           = useState(false);
+  const [rewardLoading, setRewardLoading] = useState(false);
   const [parentCopied, setParentCopied] = useState(false);
 
   const handleNativeShare = useCallback(async () => {
@@ -111,6 +115,16 @@ export default function ResultPage() {
     setParentCopied(true);
     setTimeout(() => setParentCopied(false), 2500);
   }, []);
+
+  const handleRewardRetry = useCallback(async () => {
+    setRewardLoading(true);
+    try {
+      await showRewardAd();
+      router.push("/test");
+    } finally {
+      setRewardLoading(false);
+    }
+  }, [router]);
 
   // 평균 반응속도 계산 (표시용)
   const avgReaction = results.reactionTimes.length > 0
@@ -251,6 +265,28 @@ export default function ResultPage() {
         >
           {copied ? "✅ 복사됐어요!" : "🔗 다른 방법으로 공유하기"}
         </button>
+        {/* 네이티브 앱에서만 리워드 광고 버튼 노출 */}
+        {Capacitor.isNativePlatform() && (
+          <button
+            onClick={handleRewardRetry}
+            disabled={rewardLoading}
+            className="btn-senior w-full"
+            style={{
+              fontSize:        "1.125rem",
+              fontWeight:      700,
+              backgroundColor: "var(--color-senior-surface)",
+              color:           "var(--color-senior-text)",
+              border:          "1px solid var(--color-senior-border)",
+              display:         "flex",
+              alignItems:      "center",
+              justifyContent:  "center",
+              gap:             "0.5rem",
+              opacity:         rewardLoading ? 0.6 : 1,
+            }}
+          >
+            {rewardLoading ? "⏳ 광고 준비 중..." : "📺 광고 보고 다시 연습하기"}
+          </button>
+        )}
         <Link
           href="/test"
           className="btn-senior btn-senior-primary w-full text-center"

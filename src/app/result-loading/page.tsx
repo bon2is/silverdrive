@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdBanner } from "@/components/AdBanner";
 import { useSpeech } from "@/lib/useSpeech";
-import { showInterstitialOnce } from "@/lib/useAdMob";
 
 const TOTAL_SEC = 10;
 
@@ -28,9 +27,6 @@ export default function ResultLoadingPage() {
   useEffect(() => {
     speak("검사 결과를 분석하고 있습니다. 잠시만 기다려주세요.");
 
-    // 네이티브 앱: 3초 후 전면광고 1회 노출 (세션당 1회)
-    const adTimer = setTimeout(() => { showInterstitialOnce(); }, 3000);
-
     // 카운트다운 바 (100ms 단위로 부드럽게 업데이트)
     const startAt = Date.now();
     intervalRef.current = setInterval(() => {
@@ -49,7 +45,6 @@ export default function ResultLoadingPage() {
     }, 2500);
 
     return () => {
-      clearTimeout(adTimer);
       clearInterval(intervalRef.current!);
       clearInterval(msgTimerRef.current!);
     };
