@@ -4,19 +4,19 @@ import { Capacitor } from "@capacitor/core";
 const TEST_BANNER_ID = "ca-app-pub-3940256099942544/6300978111";
 const TEST_REWARD_ID = "ca-app-pub-3940256099942544/5354046379";
 
+// 실제 광고 단위 ID (AdMob ID는 APK에 포함되는 공개 값)
+const PROD_BANNER_ID = "ca-app-pub-7999144867236526/1385353605";
+const PROD_REWARD_ID = "ca-app-pub-7999144867236526/4626607924";
+
 const isNative  = () => Capacitor.isNativePlatform();
 const isTesting = () => process.env.NODE_ENV !== "production";
 
 function getBannerId(): string {
-  return isTesting()
-    ? TEST_BANNER_ID
-    : (process.env.NEXT_PUBLIC_ADMOB_BANNER_ID ?? "");
+  return isTesting() ? TEST_BANNER_ID : PROD_BANNER_ID;
 }
 
 function getRewardId(): string {
-  return isTesting()
-    ? TEST_REWARD_ID
-    : (process.env.NEXT_PUBLIC_ADMOB_REWARD_ID ?? "");
+  return isTesting() ? TEST_REWARD_ID : PROD_REWARD_ID;
 }
 
 export async function initAdMob(): Promise<void> {
