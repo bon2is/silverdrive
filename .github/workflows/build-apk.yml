@@ -71,16 +71,43 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      - name: Check Google Maven connectivity
+      - name: Patch node_modules Gradle files (add maven.google.com)
         run: |
-          echo "## Google Maven Connectivity" >> $GITHUB_STEP_SUMMARY
-          AGP=$(curl -o /dev/null -s -w "%{http_code}" "https://dl.google.com/dl/android/maven2/com/android/tools/build/gradle/8.13.0/gradle-8.13.0.pom")
+          python3 - <<'PYEOF'
+          import os
+          files = [
+            'node_modules/@capacitor/android/capacitor/build.gradle',
+            'node_modules/@capacitor-community/admob/android/build.gradle',
+          ]
+          for path in files:
+            if not os.path.exists(path):
+              print(f'SKIP (not found): {path}')
+              continue
+            with open(path) as f:
+              content = f.read()
+            patched = content.replace(
+              "google()\n",
+              "maven { url = 'https://maven.google.com/' }\n        google()\n",
+              1  # only first occurrence (buildscript block)
+            )
+            with open(path, 'w') as f:
+              f.write(patched)
+            print(f'Patched: {path}')
+          PYEOF
+
+      - name: Check Maven URLs via annotations
+        run: |
+          DL=$(curl -o /dev/null -s -w "%{http_code}" "https://dl.google.com/dl/android/maven2/com/android/tools/build/gradle/8.13.0/gradle-8.13.0.pom")
+          MG=$(curl -o /dev/null -s -w "%{http_code}" "https://maven.google.com/com/android/tools/build/gradle/8.13.0/gradle-8.13.0.pom")
           KT=$(curl -o /dev/null -s -w "%{http_code}" "https://plugins.gradle.org/m2/org/jetbrains/kotlin/kotlin-gradle-plugin/2.2.20/kotlin-gradle-plugin-2.2.20.pom")
-          ADS=$(curl -o /dev/null -s -w "%{http_code}" "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-ads/24.9.0/play-services-ads-24.9.0.pom")
-          echo "- AGP 8.13.0: $AGP" >> $GITHUB_STEP_SUMMARY
-          echo "- Kotlin 2.2.20: $KT" >> $GITHUB_STEP_SUMMARY
-          echo "- play-services-ads 24.9.0: $ADS" >> $GITHUB_STEP_SUMMARY
-          echo "AGP=$AGP, Kotlin=$KT, Ads=$ADS"
+          echo "dl.google.com AGP=$DL  maven.google.com AGP=$MG  Kotlin=$KT"
+          if [ "$DL" != "200" ] && [ "$MG" != "200" ]; then
+            echo "::error::Both Google Maven URLs inaccessible (dl=$DL mg=$MG) — AGP cannot be resolved"
+          elif [ "$DL" != "200" ]; then
+            echo "::warning::dl.google.com returned $DL for AGP; maven.google.com returned $MG"
+          else
+            echo "::notice::Google Maven accessible (dl=$DL)"
+          fi
 
       - name: Build debug APK
         run: ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee /tmp/gradle-output.txt; exit ${PIPESTATUS[0]}
@@ -89,11 +116,9 @@ jobs:
       - name: Print Gradle log on failure
         if: failure()
         run: |
-          echo "## Gradle Failure Log" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          tail -80 /tmp/gradle-output.txt 2>/dev/null >> $GITHUB_STEP_SUMMARY || echo "(no log)" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat /tmp/gradle-output.txt 2>/dev/null || echo "(no log found)"
+          LINES=$(wc -l < /tmp/gradle-output.txt 2>/dev/null || echo 0)
+          echo "::error::Gradle build failed (log: $LINES lines)"
+          tail -60 /tmp/gradle-output.txt 2>/dev/null || echo "(no log found)"
 
       # ── APK 업로드 ────────────────────────────────────────────
       - name: Upload debug APK

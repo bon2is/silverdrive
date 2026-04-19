@@ -5,6 +5,7 @@ ext {
 
 buildscript {
     repositories {
+        maven { url = 'https://maven.google.com/' }
         google()
         mavenCentral()
     }
@@ -34,6 +35,7 @@ android {
 }
 
 repositories {
+    maven { url = 'https://maven.google.com/' }
     google()
     mavenCentral()
     flatDir{
