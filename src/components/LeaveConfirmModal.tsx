@@ -33,34 +33,34 @@ export function LeaveConfirmModal({ onConfirm, onCancel }: LeaveConfirmModalProp
 
         <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
           <button
-            onClick={onConfirm}
-            style={{
-              padding:         "1.1rem",
-              borderRadius:    "0.75rem",
-              border:          "none",
-              backgroundColor: "var(--color-senior-danger)",
-              color:           "#fff",
-              fontSize:        "1.25rem",
-              fontWeight:      700,
-              cursor:          "pointer",
-            }}
-          >
-            처음으로 돌아가기
-          </button>
-          <button
             onClick={onCancel}
             style={{
               padding:         "1.1rem",
               borderRadius:    "0.75rem",
-              border:          "3px solid var(--color-senior-border)",
-              backgroundColor: "var(--color-senior-surface)",
-              color:           "var(--color-senior-text)",
+              border:          "none",
+              backgroundColor: "var(--color-senior-primary)",
+              color:           "#000",
               fontSize:        "1.25rem",
               fontWeight:      700,
               cursor:          "pointer",
             }}
           >
             계속하기
+          </button>
+          <button
+            onClick={onConfirm}
+            style={{
+              padding:         "1.1rem",
+              borderRadius:    "0.75rem",
+              border:          "3px solid var(--color-senior-border)",
+              backgroundColor: "var(--color-senior-surface)",
+              color:           "var(--color-senior-text-muted)",
+              fontSize:        "1.125rem",
+              fontWeight:      700,
+              cursor:          "pointer",
+            }}
+          >
+            처음으로 돌아가기
           </button>
         </div>
       </div>
