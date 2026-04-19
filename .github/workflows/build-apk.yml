@@ -67,6 +67,11 @@ jobs:
           echo '[{"pkg":"@capacitor-community/admob","classpath":"com.getcapacitor.community.admob.AdMob"}]' \
             > android/app/src/main/assets/capacitor.plugins.json
 
+      # ── 서명 키스토어 복원 ────────────────────────────────────
+      - name: Decode keystore
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > /tmp/silverdrive-release.jks
+
       # ── Gradle 빌드 ───────────────────────────────────────────
       - name: Make gradlew executable
         run: chmod +x android/gradlew
@@ -109,9 +114,14 @@ jobs:
             echo "::notice::Google Maven accessible (dl=$DL)"
           fi
 
-      - name: Build debug APK
-        run: ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee /tmp/gradle-output.txt; exit ${PIPESTATUS[0]}
+      - name: Build release APK
+        run: ./gradlew assembleRelease --no-daemon --stacktrace 2>&1 | tee /tmp/gradle-output.txt; exit ${PIPESTATUS[0]}
         working-directory: android
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Print Gradle log on failure
         if: failure()
@@ -124,12 +134,12 @@ jobs:
           cat "$LOG" 2>/dev/null || echo "(no log found)"
 
       # ── APK 업로드 ────────────────────────────────────────────
-      - name: Upload debug APK
+      - name: Upload release APK
         uses: actions/upload-artifact@v4
         with:
-          name: silverdrive-debug-${{ github.run_number }}
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 30
+          name: silverdrive-release-${{ github.run_number }}
+          path: android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 90
 
       - name: Upload Gradle log on failure
         if: failure()
