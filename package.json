@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:app": "BUILD_TARGET=app next build",
+    "build:app": "node scripts/build-android.js",
     "start": "next start",
     "lint": "eslint"
   },
