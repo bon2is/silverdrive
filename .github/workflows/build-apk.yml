@@ -30,7 +30,7 @@ jobs:
           # License 동의
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
           # Platform 35 + build-tools 설치
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-35" "build-tools;35.0.0"
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-35" "platforms;android-36" "build-tools;35.0.0"
           # Gradle이 SDK를 찾을 수 있도록 local.properties 생성
           echo "sdk.dir=$ANDROID_HOME" > android/local.properties
 
