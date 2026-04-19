@@ -265,18 +265,15 @@ export default function ResultPage() {
         >
           {copied ? "✅ 복사됐어요!" : "🔗 다른 방법으로 공유하기"}
         </button>
-        {/* 네이티브 앱에서만 리워드 광고 버튼 노출 */}
-        {Capacitor.isNativePlatform() && (
+        {/* 앱: 광고보고 다시하기만 / 웹: 일반 다시하기만 */}
+        {Capacitor.isNativePlatform() ? (
           <button
             onClick={handleRewardRetry}
             disabled={rewardLoading}
-            className="btn-senior w-full"
+            className="btn-senior btn-senior-primary w-full"
             style={{
-              fontSize:        "1.125rem",
+              fontSize:        "1.25rem",
               fontWeight:      700,
-              backgroundColor: "var(--color-senior-surface)",
-              color:           "var(--color-senior-text)",
-              border:          "1px solid var(--color-senior-border)",
               display:         "flex",
               alignItems:      "center",
               justifyContent:  "center",
@@ -286,14 +283,15 @@ export default function ResultPage() {
           >
             {rewardLoading ? "⏳ 광고 준비 중..." : "📺 광고 보고 다시 연습하기"}
           </button>
+        ) : (
+          <Link
+            href="/test"
+            className="btn-senior btn-senior-primary w-full text-center"
+            style={{ fontSize: "1.25rem" }}
+          >
+            다시 연습하기
+          </Link>
         )}
-        <Link
-          href="/test"
-          className="btn-senior btn-senior-primary w-full text-center"
-          style={{ fontSize: "1.25rem" }}
-        >
-          다시 연습하기
-        </Link>
         <ReminderButton />
       </div>
 

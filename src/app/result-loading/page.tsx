@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdBanner } from "@/components/AdBanner";
 import { useSpeech } from "@/lib/useSpeech";
+import { showBottomBanner, hideBanner } from "@/lib/useAdMob";
 
 const TOTAL_SEC = 10;
 
@@ -23,6 +24,11 @@ export default function ResultLoadingPage() {
   const [msgIdx,    setMsgIdx]    = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const msgTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    showBottomBanner();
+    return () => { hideBanner(); };
+  }, []);
 
   useEffect(() => {
     speak("검사 결과를 분석하고 있습니다. 잠시만 기다려주세요.");
