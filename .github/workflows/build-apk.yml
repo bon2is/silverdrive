@@ -116,9 +116,12 @@ jobs:
       - name: Print Gradle log on failure
         if: failure()
         run: |
-          LINES=$(wc -l < /tmp/gradle-output.txt 2>/dev/null || echo 0)
-          echo "::error::Gradle build failed (log: $LINES lines)"
-          tail -60 /tmp/gradle-output.txt 2>/dev/null || echo "(no log found)"
+          LOG=/tmp/gradle-output.txt
+          LINES=$(wc -l < "$LOG" 2>/dev/null || echo 0)
+          TASK=$(grep -m1 "FAILED\|> Task" "$LOG" 2>/dev/null | head -c120 || echo "unknown")
+          WHAT=$(awk '/What went wrong/{found=1} found{print; count++; if(count>=3) exit}' "$LOG" 2>/dev/null | tr '\n' '|' | head -c200 || echo "")
+          echo "::error::[$LINES lines] Task: $TASK | $WHAT"
+          cat "$LOG" 2>/dev/null || echo "(no log found)"
 
       # ── APK 업로드 ────────────────────────────────────────────
       - name: Upload debug APK
