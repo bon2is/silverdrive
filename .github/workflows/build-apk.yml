@@ -51,11 +51,22 @@ jobs:
           NEXT_PUBLIC_ADMOB_BANNER_ID: ${{ secrets.ADMOB_BANNER_ID }}
           NEXT_PUBLIC_ADMOB_REWARD_ID: ${{ secrets.ADMOB_REWARD_ID }}
 
-      # ── 6. 웹 에셋 직접 복사 (cap copy 대신 shell로 안정적으로 처리) ──
-      - name: Copy web assets to Android
+      # ── 6. 웹 에셋 + Capacitor 설정 파일 생성 ─────────────────
+      # android/.gitignore가 assets/public, capacitor.config.json 등을 제외하므로
+      # CI에서는 디렉토리부터 생성 후 직접 복사해야 함
+      - name: Copy web assets and generate Capacitor configs
         run: |
+          mkdir -p android/app/src/main/assets
           rm -rf android/app/src/main/assets/public
           cp -r out android/app/src/main/assets/public
+          echo '{
+            "appId": "com.andxo.silverdrive",
+            "appName": "실버드라이브",
+            "webDir": "out",
+            "android": { "backgroundColor": "#1a1a2e" }
+          }' > android/app/src/main/assets/capacitor.config.json
+          echo '[{"pkg":"@capacitor-community/admob","classpath":"com.getcapacitor.community.admob.AdMob"}]' \
+            > android/app/src/main/assets/capacitor.plugins.json
 
       # ── 7. Gradle 빌드 ────────────────────────────────────────
       - name: Make gradlew executable
