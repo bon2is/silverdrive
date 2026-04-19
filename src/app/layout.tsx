@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import { PwaRegister } from "@/components/PwaRegister";
 import { JsonLd } from "@/components/JsonLd";
+import { AdMobInit } from "@/components/AdMobInit";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
@@ -81,6 +82,7 @@ export default function RootLayout({
       <body className="antialiased">
         <PwaRegister />
         <JsonLd />
+        <AdMobInit />
         {children}
 
         {/* Google Analytics 4 — NEXT_PUBLIC_GA_ID 없으면 비로드 */}

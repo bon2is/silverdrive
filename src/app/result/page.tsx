@@ -12,6 +12,7 @@ import { AdBanner } from "@/components/AdBanner";
 import { HistorySection } from "@/components/HistorySection";
 import { useSpeech } from "@/lib/useSpeech";
 import { saveTestRecord } from "@/lib/testHistory";
+import { showBottomBanner, hideBanner } from "@/lib/useAdMob";
 
 const GRADE_LABEL: Record<string, string> = {
   safe:    "안전",
@@ -133,6 +134,11 @@ export default function ResultPage() {
   useEffect(() => {
     speak(`검사 결과입니다. 종합 ${score.total}점, ${GRADE_LABEL[score.grade]} 등급입니다.`);
   }, [score.grade, score.total, speak]);
+
+  useEffect(() => {
+    showBottomBanner();
+    return () => { hideBanner(); };
+  }, []);
 
   return (
     <main className="flex min-h-dvh flex-col px-6 py-8 gap-6">

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Script from "next/script";
+import { Capacitor } from "@capacitor/core";
 import { AdErrorBoundary } from "@/components/AdErrorBoundary";
 import { SafeDrivingCard } from "@/components/SafeDrivingCard";
 
@@ -17,22 +18,26 @@ interface AdUnitProps {
 }
 
 function AdUnit({ variant = "banner" }: AdUnitProps) {
-  const pushed = useRef(false);
-  const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT?.trim();
-  const slot   = process.env.NEXT_PUBLIC_ADSENSE_SLOT?.trim();
-
-  const isRect    = variant === "rectangle";
+  const pushed  = useRef(false);
+  const native  = Capacitor.isNativePlatform();
+  const client  = process.env.NEXT_PUBLIC_ADSENSE_CLIENT?.trim();
+  const slot    = process.env.NEXT_PUBLIC_ADSENSE_SLOT?.trim();
+  const isRect  = variant === "rectangle";
   const minHeight = isRect ? "250px" : "60px";
 
   useEffect(() => {
-    if (!client || pushed.current) return;
+    // 네이티브 앱에서는 AdSense 미사용 (AdMob 네이티브 오버레이로 대체)
+    if (native || !client || pushed.current) return;
     pushed.current = true;
     try {
       (window.adsbygoogle = window.adsbygoogle || []).push({});
     } catch (e) {
       console.warn("[AdSense] push 실패:", e);
     }
-  }, [client]);
+  }, [native, client]);
+
+  // 네이티브 앱에서는 AdSense 렌더링 불필요 (AdMob이 네이티브 레이어에서 처리)
+  if (native) return null;
 
   if (!client) {
     return (
