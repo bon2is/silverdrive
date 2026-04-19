@@ -73,13 +73,14 @@ jobs:
 
       - name: Check Google Maven connectivity
         run: |
-          echo "=== Google Maven connectivity check ==="
-          echo -n "AGP 8.13.0 POM: "
-          curl -o /dev/null -s -w "%{http_code}\n" "https://dl.google.com/dl/android/maven2/com/android/tools/build/gradle/8.13.0/gradle-8.13.0.pom"
-          echo -n "Kotlin 2.2.20 plugin: "
-          curl -o /dev/null -s -w "%{http_code}\n" "https://plugins.gradle.org/m2/org/jetbrains/kotlin/kotlin-gradle-plugin/2.2.20/kotlin-gradle-plugin-2.2.20.pom"
-          echo -n "play-services-ads 24.9.0: "
-          curl -o /dev/null -s -w "%{http_code}\n" "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-ads/24.9.0/play-services-ads-24.9.0.pom"
+          echo "## Google Maven Connectivity" >> $GITHUB_STEP_SUMMARY
+          AGP=$(curl -o /dev/null -s -w "%{http_code}" "https://dl.google.com/dl/android/maven2/com/android/tools/build/gradle/8.13.0/gradle-8.13.0.pom")
+          KT=$(curl -o /dev/null -s -w "%{http_code}" "https://plugins.gradle.org/m2/org/jetbrains/kotlin/kotlin-gradle-plugin/2.2.20/kotlin-gradle-plugin-2.2.20.pom")
+          ADS=$(curl -o /dev/null -s -w "%{http_code}" "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-ads/24.9.0/play-services-ads-24.9.0.pom")
+          echo "- AGP 8.13.0: $AGP" >> $GITHUB_STEP_SUMMARY
+          echo "- Kotlin 2.2.20: $KT" >> $GITHUB_STEP_SUMMARY
+          echo "- play-services-ads 24.9.0: $ADS" >> $GITHUB_STEP_SUMMARY
+          echo "AGP=$AGP, Kotlin=$KT, Ads=$ADS"
 
       - name: Build debug APK
         run: ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee /tmp/gradle-output.txt; exit ${PIPESTATUS[0]}
@@ -88,7 +89,10 @@ jobs:
       - name: Print Gradle log on failure
         if: failure()
         run: |
-          echo "=== Gradle Build Log ==="
+          echo "## Gradle Failure Log" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          tail -80 /tmp/gradle-output.txt 2>/dev/null >> $GITHUB_STEP_SUMMARY || echo "(no log)" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
           cat /tmp/gradle-output.txt 2>/dev/null || echo "(no log found)"
 
       # ── APK 업로드 ────────────────────────────────────────────
