@@ -16,7 +16,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ── 2. Node.js 환경 설정 ──────────────────────────────────
+      # ── 2. Java 먼저 설정 (Gradle이 필요하기 때문에 앞에 위치) ──
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      # ── 3. Android SDK 설정 ───────────────────────────────────
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK platform 35 + build-tools
+        run: |
+          sdkmanager --install "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
+
+      # ── 4. Node.js 환경 설정 ──────────────────────────────────
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -26,7 +42,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # ── 3. Next.js 정적 빌드 (Capacitor용) ───────────────────
+      # ── 5. Next.js 정적 빌드 (Capacitor용) ───────────────────
       - name: Build Next.js static export
         run: npm run build:app
         env:
@@ -35,23 +51,9 @@ jobs:
           NEXT_PUBLIC_ADMOB_BANNER_ID: ${{ secrets.ADMOB_BANNER_ID }}
           NEXT_PUBLIC_ADMOB_REWARD_ID: ${{ secrets.ADMOB_REWARD_ID }}
 
-      # ── 4. Java 설정 ─────────────────────────────────────────
-      - name: Set up Java 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-
-      # ── 5. Android SDK 설정 ───────────────────────────────────
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install SDK platform 35 + build-tools
-        run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0" "platform-tools"
-
-      # ── 6. Capacitor 동기화 ───────────────────────────────────
-      - name: Sync Capacitor web assets to Android
-        run: npx cap sync android
+      # ── 6. 웹 에셋만 복사 (cap copy = cap sync에서 Gradle 부분 제외) ──
+      - name: Copy web assets to Android
+        run: npx cap copy android
 
       # ── 7. Gradle 빌드 ────────────────────────────────────────
       - name: Make gradlew executable
@@ -60,6 +62,8 @@ jobs:
       - name: Build debug APK
         run: ./gradlew assembleDebug --no-daemon
         working-directory: android
+        env:
+          ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
 
       # ── 8. APK 업로드 (Actions Artifact) ─────────────────────
       - name: Upload debug APK
