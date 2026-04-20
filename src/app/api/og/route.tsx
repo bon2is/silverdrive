@@ -2,6 +2,8 @@ import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 
 export const runtime = "edge";
+// grade는 safe/caution/danger 3가지뿐 — 30일 캐시
+export const revalidate = 2592000;
 
 const GRADE_MAP = {
   safe:    { emoji: "🟢", label: "안전 등급",      badgeBg: "#dcfce7", badgeText: "#166534" },
@@ -65,6 +67,12 @@ export async function GET(req: NextRequest) {
         </div>
       </div>
     ),
-    { width: 1200, height: 630 }
+    {
+      width: 1200,
+      height: 630,
+      headers: {
+        "Cache-Control": "public, max-age=2592000, s-maxage=2592000, stale-while-revalidate=86400",
+      },
+    }
   );
 }
