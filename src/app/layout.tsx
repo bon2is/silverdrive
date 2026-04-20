@@ -5,6 +5,7 @@ import "./globals.css";
 import { PwaRegister } from "@/components/PwaRegister";
 import { JsonLd } from "@/components/JsonLd";
 import { AdMobInit } from "@/components/AdMobInit";
+import { Analytics } from "@vercel/analytics/next";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
@@ -83,6 +84,7 @@ export default function RootLayout({
         <PwaRegister />
         <JsonLd />
         <AdMobInit />
+        <Analytics />
         {children}
 
         {/* Google Analytics 4 — NEXT_PUBLIC_GA_ID 없으면 비로드 */}
