@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">실버드라이브</string>
+    <string name="title_activity_main">실버드라이브</string>
+    <string name="package_name">com.andxo.silverdrive</string>
+    <string name="custom_url_scheme">com.andxo.silverdrive</string>
+</resources>

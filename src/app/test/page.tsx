@@ -7,6 +7,7 @@ import { SpeechGuide } from "@/components/SpeechGuide";
 import { useTestStore } from "@/lib/useTestStore";
 import { useLevelStore, type Level } from "@/lib/useLevelStore";
 import { LEVEL_CONFIGS } from "@/lib/levelConfig";
+import { showBottomBanner, hideBanner } from "@/lib/useAdMob";
 
 const TESTS = [
   { icon: "🧠", name: "기억력 검사",       step: "1단계" },
@@ -26,6 +27,11 @@ export default function TestHubPage() {
   const cfg       = LEVEL_CONFIGS[level];
 
   useEffect(() => { reset(); }, [reset]);
+
+  useEffect(() => {
+    showBottomBanner();
+    return () => { hideBanner(); };
+  }, []);
 
   const testDescs = [
     `단어 ${cfg.memoryTargets}개를 ${cfg.memorySec}초간 기억한 뒤 회상해요`,

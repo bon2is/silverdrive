@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTestStore } from "@/lib/useTestStore";
 import { calcScore } from "@/lib/gradeCalculator";
 import { GradeBadge } from "@/components/GradeBadge";
@@ -12,6 +13,8 @@ import { AdBanner } from "@/components/AdBanner";
 import { HistorySection } from "@/components/HistorySection";
 import { useSpeech } from "@/lib/useSpeech";
 import { saveTestRecord } from "@/lib/testHistory";
+import { showBottomBanner, hideBanner, showRewardAd } from "@/lib/useAdMob";
+import { Capacitor } from "@capacitor/core";
 
 const GRADE_LABEL: Record<string, string> = {
   safe:    "안전",
@@ -43,10 +46,12 @@ const GRADE_LABEL_SHARE: Record<string, string> = {
 };
 
 export default function ResultPage() {
-  const results = useTestStore((s) => s.results);
+  const results  = useTestStore((s) => s.results);
   const { speak } = useSpeech();
-  const score = calcScore(results);
-  const [copied, setCopied] = useState(false);
+  const router   = useRouter();
+  const score    = calcScore(results);
+  const [copied, setCopied]           = useState(false);
+  const [rewardLoading, setRewardLoading] = useState(false);
   const [parentCopied, setParentCopied] = useState(false);
 
   const handleNativeShare = useCallback(async () => {
@@ -111,6 +116,16 @@ export default function ResultPage() {
     setTimeout(() => setParentCopied(false), 2500);
   }, []);
 
+  const handleRewardRetry = useCallback(async () => {
+    setRewardLoading(true);
+    try {
+      await showRewardAd();
+      router.push("/test");
+    } finally {
+      setRewardLoading(false);
+    }
+  }, [router]);
+
   // 평균 반응속도 계산 (표시용)
   const avgReaction = results.reactionTimes.length > 0
     ? Math.round(results.reactionTimes.reduce((a, b) => a + b, 0) / results.reactionTimes.length)
@@ -133,6 +148,11 @@ export default function ResultPage() {
   useEffect(() => {
     speak(`검사 결과입니다. 종합 ${score.total}점, ${GRADE_LABEL[score.grade]} 등급입니다.`);
   }, [score.grade, score.total, speak]);
+
+  useEffect(() => {
+    showBottomBanner();
+    return () => { hideBanner(); };
+  }, []);
 
   return (
     <main className="flex min-h-dvh flex-col px-6 py-8 gap-6">
@@ -245,13 +265,33 @@ export default function ResultPage() {
         >
           {copied ? "✅ 복사됐어요!" : "🔗 다른 방법으로 공유하기"}
         </button>
-        <Link
-          href="/test"
-          className="btn-senior btn-senior-primary w-full text-center"
-          style={{ fontSize: "1.25rem" }}
-        >
-          다시 연습하기
-        </Link>
+        {/* 앱: 광고보고 다시하기만 / 웹: 일반 다시하기만 */}
+        {Capacitor.isNativePlatform() ? (
+          <button
+            onClick={handleRewardRetry}
+            disabled={rewardLoading}
+            className="btn-senior btn-senior-primary w-full"
+            style={{
+              fontSize:        "1.25rem",
+              fontWeight:      700,
+              display:         "flex",
+              alignItems:      "center",
+              justifyContent:  "center",
+              gap:             "0.5rem",
+              opacity:         rewardLoading ? 0.6 : 1,
+            }}
+          >
+            {rewardLoading ? "⏳ 광고 준비 중..." : "📺 광고 보고 다시 연습하기"}
+          </button>
+        ) : (
+          <Link
+            href="/test"
+            className="btn-senior btn-senior-primary w-full text-center"
+            style={{ fontSize: "1.25rem" }}
+          >
+            다시 연습하기
+          </Link>
+        )}
         <ReminderButton />
       </div>
 
