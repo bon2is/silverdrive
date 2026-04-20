@@ -45,3 +45,4 @@ next-env.d.ts
 *.jks
 *.jks.b64
 icon-source.jpeg
+icon-512.png
