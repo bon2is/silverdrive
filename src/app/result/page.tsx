@@ -150,7 +150,7 @@ export default function ResultPage() {
   }, [score.grade, score.total, speak]);
 
   useEffect(() => {
-    showBottomBanner();
+    removeBanner().then(() => showBottomBanner());
     return () => { removeBanner(); };
   }, []);
 
