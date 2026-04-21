@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdBanner } from "@/components/AdBanner";
 import { useSpeech } from "@/lib/useSpeech";
-import { showBottomBanner, hideBanner } from "@/lib/useAdMob";
+import { showCenterBanner, hideBanner } from "@/lib/useAdMob";
 
 const TOTAL_SEC = 10;
 
@@ -26,7 +26,7 @@ export default function ResultLoadingPage() {
   const msgTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    showBottomBanner();
+    showCenterBanner();
     return () => { hideBanner(); };
   }, []);
 

@@ -38,6 +38,19 @@ export async function showBottomBanner(): Promise<void> {
   });
 }
 
+export async function showCenterBanner(): Promise<void> {
+  if (!isNative()) return;
+  const adId = getBannerId();
+  if (!adId) return;
+  const { AdMob, BannerAdSize, BannerAdPosition } = await import("@capacitor-community/admob");
+  await AdMob.showBanner({
+    adId,
+    adSize: BannerAdSize.MEDIUM_RECTANGLE,
+    position: BannerAdPosition.CENTER,
+    isTesting: isTesting(),
+  });
+}
+
 export async function hideBanner(): Promise<void> {
   if (!isNative()) return;
   const { AdMob } = await import("@capacitor-community/admob");
