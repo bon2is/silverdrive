@@ -9,6 +9,7 @@ import { useTestStore } from "@/lib/useTestStore";
 import { useSpeech } from "@/lib/useSpeech";
 import { useLevelStore } from "@/lib/useLevelStore";
 import { LEVEL_CONFIGS } from "@/lib/levelConfig";
+import { getNextTestPath } from "@/lib/testNavigation";
 import { SIGNS, buildRound, buildQuestions } from "@/lib/signs";
 import { useConfirmLeave } from "@/lib/useConfirmLeave";
 import { LeaveConfirmModal } from "@/components/LeaveConfirmModal";
@@ -21,6 +22,7 @@ export default function SignsTestPage() {
   const { showConfirm, confirmLeave, cancelLeave } = useConfirmLeave();
   const addSignAnswer  = useTestStore((s) => s.addSignAnswer);
   const level          = useLevelStore((s) => s.level);
+  const selectedTests  = useLevelStore((s) => s.selectedTests);
   const cfg            = LEVEL_CONFIGS[level];
 
   const questions = useMemo(
@@ -77,14 +79,14 @@ export default function SignsTestPage() {
       const next = round + 1;
       timerRef.current = setTimeout(() => {
         if (next >= questions.length) {
-          router.push("/test/hazard");
+          router.push(getNextTestPath("signs", selectedTests));
         } else {
           setRound(next);
           startRound(next);
         }
       }, 1200);
     },
-    [locked, phase, questions, round, addSignAnswer, speak, router, startRound]
+    [locked, phase, questions, round, addSignAnswer, speak, router, startRound, selectedTests]
   );
 
   const q           = questions[round];

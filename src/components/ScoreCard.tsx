@@ -1,15 +1,17 @@
 interface ScoreCardProps {
   icon:  string;
   label: string;
-  score: number;
+  score: number | null; // null = 미실시
   sub?:  string;
 }
 
 export function ScoreCard({ icon, label, score, sub }: ScoreCardProps) {
+  const skipped = score === null;
   const color =
-    score >= 80 ? "var(--color-senior-success)" :
-    score >= 60 ? "var(--color-senior-warning)" :
-    "var(--color-senior-danger)";
+    skipped         ? "var(--color-senior-text-muted)" :
+    score >= 80     ? "var(--color-senior-success)"    :
+    score >= 60     ? "var(--color-senior-warning)"    :
+                      "var(--color-senior-danger)";
 
   return (
     <div className="card-senior" style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
@@ -17,11 +19,16 @@ export function ScoreCard({ icon, label, score, sub }: ScoreCardProps) {
         <span style={{ fontSize: "1.75rem", flexShrink: 0 }}>{icon}</span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ fontSize: "1.0625rem", fontWeight: 700 }}>{label}</p>
-          {sub && (
+          {sub && !skipped && (
             <p style={{ fontSize: "0.875rem", color: "var(--color-senior-text-muted)" }}>{sub}</p>
           )}
+          {skipped && (
+            <p style={{ fontSize: "0.875rem", color: "var(--color-senior-text-muted)" }}>미실시</p>
+          )}
         </div>
-        <p style={{ fontSize: "1.5rem", fontWeight: 900, color, flexShrink: 0 }}>{score}점</p>
+        <p style={{ fontSize: "1.5rem", fontWeight: 900, color, flexShrink: 0 }}>
+          {skipped ? "–" : `${score}점`}
+        </p>
       </div>
       {/* 점수 바 */}
       <div style={{
@@ -32,7 +39,7 @@ export function ScoreCard({ icon, label, score, sub }: ScoreCardProps) {
       }}>
         <div style={{
           height:          "100%",
-          width:           `${score}%`,
+          width:           skipped ? "0%" : `${score}%`,
           borderRadius:    "99px",
           backgroundColor: color,
           transition:      "width 0.6s ease",
