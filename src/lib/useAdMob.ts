@@ -4,15 +4,20 @@ import { Capacitor } from "@capacitor/core";
 const TEST_BANNER_ID = "ca-app-pub-3940256099942544/6300978111";
 const TEST_REWARD_ID = "ca-app-pub-3940256099942544/5354046379";
 
-// 실제 광고 단위 ID (AdMob ID는 APK에 포함되는 공개 값)
-const PROD_BANNER_ID = "ca-app-pub-7999144867236526/1385353605";
-const PROD_REWARD_ID = "ca-app-pub-7999144867236526/4626607924";
+// 실제 광고 단위 ID
+const PROD_BANNER_ID       = "ca-app-pub-7999144867236526/1385353605";
+const PROD_REWARD_ID       = "ca-app-pub-7999144867236526/4626607924";
+const PROD_MIDDLE_WAIT_ID  = "ca-app-pub-7999144867236526/2000726421";
 
 const isNative  = () => Capacitor.isNativePlatform();
 const isTesting = () => process.env.NODE_ENV !== "production";
 
 function getBannerId(): string {
   return isTesting() ? TEST_BANNER_ID : PROD_BANNER_ID;
+}
+
+function getMiddleWaitId(): string {
+  return isTesting() ? TEST_BANNER_ID : PROD_MIDDLE_WAIT_ID;
 }
 
 function getRewardId(): string {
@@ -40,7 +45,7 @@ export async function showBottomBanner(): Promise<void> {
 
 export async function showCenterBanner(): Promise<void> {
   if (!isNative()) return;
-  const adId = getBannerId();
+  const adId = getMiddleWaitId();
   if (!adId) return;
   const { AdMob, BannerAdSize, BannerAdPosition } = await import("@capacitor-community/admob");
   await AdMob.showBanner({
@@ -72,6 +77,8 @@ export async function showRewardAd(): Promise<boolean> {
     const { AdMob } = await import("@capacitor-community/admob");
     await AdMob.prepareRewardVideoAd({ adId, isTesting: isTesting() });
     const result = await AdMob.showRewardVideoAd();
+    // 광고 닫힌 후 네이티브 UI 정리 시간 확보 (즉시 navigation 시 앱 종료 방지)
+    await new Promise(resolve => setTimeout(resolve, 500));
     return !!result;
   } catch {
     return false;
