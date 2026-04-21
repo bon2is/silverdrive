@@ -5,12 +5,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTestStore } from "@/lib/useTestStore";
 import { calcScore } from "@/lib/gradeCalculator";
+import { useLevelStore } from "@/lib/useLevelStore";
 import { GradeBadge } from "@/components/GradeBadge";
 import { ScoreCard } from "@/components/ScoreCard";
 import { ShareButton } from "@/components/ShareButton";
 import { ReminderButton } from "@/components/ReminderButton";
 import { AdBanner } from "@/components/AdBanner";
 import { HistorySection } from "@/components/HistorySection";
+import { FeedbackButton } from "@/components/FeedbackButton";
 import { useSpeech } from "@/lib/useSpeech";
 import { saveTestRecord } from "@/lib/testHistory";
 import { showBottomBanner, removeBanner, showRewardAd } from "@/lib/useAdMob";
@@ -46,10 +48,11 @@ const GRADE_LABEL_SHARE: Record<string, string> = {
 };
 
 export default function ResultPage() {
-  const results  = useTestStore((s) => s.results);
-  const { speak } = useSpeech();
-  const router   = useRouter();
-  const score    = calcScore(results);
+  const results       = useTestStore((s) => s.results);
+  const selectedTests = useLevelStore((s) => s.selectedTests);
+  const { speak }     = useSpeech();
+  const router        = useRouter();
+  const score         = calcScore(results, selectedTests);
   const [copied, setCopied]           = useState(false);
   const [rewardLoading, setRewardLoading] = useState(false);
   const [parentCopied, setParentCopied] = useState(false);
@@ -143,11 +146,11 @@ export default function ResultPage() {
     if (savedRef.current || score.total === 0) return;
     savedRef.current = true;
     saveTestRecord(score.total, score.grade, {
-      memory:   score.memory,
-      trail:    score.trail,
-      reaction: score.reaction,
-      signs:    score.signs,
-      hazard:   score.hazard,
+      memory:   score.memory   ?? 0,
+      trail:    score.trail    ?? 0,
+      reaction: score.reaction ?? 0,
+      signs:    score.signs    ?? 0,
+      hazard:   score.hazard   ?? 0,
     });
   }, [score]);
 
@@ -209,7 +212,7 @@ export default function ResultPage() {
         />
       </div>
 
-      {/* 맞춤 조언 — 60점 미만 항목만 표시 */}
+      {/* 맞춤 조언 — 실시한 검사 중 60점 미만 항목만 표시 */}
       {(() => {
         const weak = (
           [
@@ -218,8 +221,8 @@ export default function ResultPage() {
             ["reaction", score.reaction],
             ["signs",    score.signs],
             ["hazard",   score.hazard],
-          ] as [string, number][]
-        ).filter(([, s]) => s < 60);
+          ] as [string, number | null][]
+        ).filter(([, s]) => s !== null && s < 60) as [string, number][];
 
         if (weak.length === 0) return null;
 
@@ -299,6 +302,7 @@ export default function ResultPage() {
           </Link>
         )}
         <ReminderButton />
+        <FeedbackButton grade={score.grade} total={score.total} />
       </div>
 
       {/* 부모님께 보내기 섹션 */}

@@ -2,10 +2,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { Suspense } from "react";
 import { UtmBanner } from "@/components/UtmBanner";
+import { HomeBannerCleanup } from "@/components/HomeBannerCleanup";
 
 export default function Home() {
   return (
     <main className="flex min-h-dvh flex-col items-center px-6 py-8">
+      <HomeBannerCleanup />
 
       {/* 히어로 이미지 */}
       <div

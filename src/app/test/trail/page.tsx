@@ -7,6 +7,7 @@ import { useSpeech } from "@/lib/useSpeech";
 import { useTestStore } from "@/lib/useTestStore";
 import { useLevelStore } from "@/lib/useLevelStore";
 import { LEVEL_CONFIGS } from "@/lib/levelConfig";
+import { getNextTestPath } from "@/lib/testNavigation";
 import { useConfirmLeave } from "@/lib/useConfirmLeave";
 import { LeaveConfirmModal } from "@/components/LeaveConfirmModal";
 
@@ -41,6 +42,7 @@ export default function TrailTestPage() {
   const { speak }      = useSpeech();
   const setTrailResult = useTestStore((s) => s.setTrailResult);
   const level          = useLevelStore((s) => s.level);
+  const selectedTests  = useLevelStore((s) => s.selectedTests);
   const cfg            = LEVEL_CONFIGS[level];
   const { showConfirm, confirmLeave, cancelLeave } = useConfirmLeave();
 
@@ -70,7 +72,7 @@ export default function TrailTestPage() {
         setTrailResult(elapsed, errors);
         setPhase("done");
         speak(`숫자 연결 완료! ${(elapsed / 1000).toFixed(1)}초 걸렸습니다.`);
-        setTimeout(() => router.push("/test/reaction"), 3000);
+        setTimeout(() => router.push(getNextTestPath("trail", selectedTests)), 3000);
       } else {
         setNext(num + 1);
       }
@@ -81,7 +83,7 @@ export default function TrailTestPage() {
       if (msgTimerRef.current) clearTimeout(msgTimerRef.current);
       msgTimerRef.current = setTimeout(() => setWrongMsg(""), 1800);
     }
-  }, [next, errors, cfg.trailMax, setTrailResult, speak, router]);
+  }, [next, errors, cfg.trailMax, setTrailResult, speak, router, selectedTests]);
 
   const numSize = cfg.trailMax <= 8 ? "1.625rem" : cfg.trailMax <= 10 ? "1.5rem" : "1.125rem";
   const btnSize = cfg.trailMax <= 10 ? "70px" : "58px";

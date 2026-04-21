@@ -8,6 +8,7 @@ import { useTestStore } from "@/lib/useTestStore";
 import { useSpeech } from "@/lib/useSpeech";
 import { useLevelStore } from "@/lib/useLevelStore";
 import { LEVEL_CONFIGS } from "@/lib/levelConfig";
+import { getNextTestPath } from "@/lib/testNavigation";
 import { useConfirmLeave } from "@/lib/useConfirmLeave";
 import { LeaveConfirmModal } from "@/components/LeaveConfirmModal";
 
@@ -22,6 +23,7 @@ export default function HazardTestPage() {
   const { speak }       = useSpeech();
   const addHazardAnswer = useTestStore((s) => s.addHazardAnswer);
   const level           = useLevelStore((s) => s.level);
+  const selectedTests   = useLevelStore((s) => s.selectedTests);
   const cfg             = LEVEL_CONFIGS[level];
   const { showConfirm, confirmLeave, cancelLeave } = useConfirmLeave();
 
@@ -55,7 +57,7 @@ export default function HazardTestPage() {
     const nextRound = roundRef.current + 1;
     activeTimerRef.current = setTimeout(() => {
       if (nextRound >= cfg.hazardRounds) {
-        router.push("/result-loading");
+        router.push(getNextTestPath("hazard", selectedTests));
       } else {
         setRound(nextRound);
         startRoundRef.current?.();

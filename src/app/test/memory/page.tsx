@@ -7,6 +7,7 @@ import { useSpeech } from "@/lib/useSpeech";
 import { useTestStore } from "@/lib/useTestStore";
 import { useLevelStore } from "@/lib/useLevelStore";
 import { LEVEL_CONFIGS } from "@/lib/levelConfig";
+import { getNextTestPath } from "@/lib/testNavigation";
 import { buildMemoryRound } from "@/lib/memory";
 import { useConfirmLeave } from "@/lib/useConfirmLeave";
 import { LeaveConfirmModal } from "@/components/LeaveConfirmModal";
@@ -19,6 +20,7 @@ export default function MemoryTestPage() {
   const { speak }      = useSpeech();
   const setMemoryScore = useTestStore((s) => s.setMemoryScore);
   const level          = useLevelStore((s) => s.level);
+  const selectedTests  = useLevelStore((s) => s.selectedTests);
   const cfg            = LEVEL_CONFIGS[level];
 
   const round      = useMemo(() => buildMemoryRound(cfg.memoryTargets, cfg.memoryChoices), [cfg.memoryTargets, cfg.memoryChoices]);
@@ -58,8 +60,8 @@ export default function MemoryTestPage() {
     setMemoryScore(score, cfg.memoryTargets);
     setPhase("done");
     speak(`${score}개 맞추셨습니다. 잘 하셨어요!`);
-    setTimeout(() => router.push("/test/trail"), 2000);
-  }, [round.targets, selected, setMemoryScore, cfg.memoryTargets, speak, router]);
+    setTimeout(() => router.push(getNextTestPath("memory", selectedTests)), 2000);
+  }, [round.targets, selected, setMemoryScore, cfg.memoryTargets, speak, router, selectedTests]);
 
   const remaining = Math.max(cfg.memorySec - elapsed, 0);
 
