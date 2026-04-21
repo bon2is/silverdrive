@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdBanner } from "@/components/AdBanner";
 import { useSpeech } from "@/lib/useSpeech";
-import { showCenterBanner, hideBanner } from "@/lib/useAdMob";
+import { showCenterBanner, removeBanner } from "@/lib/useAdMob";
 
 const TOTAL_SEC = 10;
 
@@ -27,7 +27,7 @@ export default function ResultLoadingPage() {
 
   useEffect(() => {
     showCenterBanner();
-    return () => { hideBanner(); };
+    return () => { removeBanner(); };
   }, []);
 
   useEffect(() => {

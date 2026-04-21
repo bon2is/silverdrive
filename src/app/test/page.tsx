@@ -7,7 +7,7 @@ import { SpeechGuide } from "@/components/SpeechGuide";
 import { useTestStore } from "@/lib/useTestStore";
 import { useLevelStore, type Level } from "@/lib/useLevelStore";
 import { LEVEL_CONFIGS } from "@/lib/levelConfig";
-import { showBottomBanner, hideBanner } from "@/lib/useAdMob";
+import { showBottomBanner, removeBanner } from "@/lib/useAdMob";
 
 const TESTS = [
   { icon: "🧠", name: "기억력 검사",       step: "1단계" },
@@ -30,7 +30,7 @@ export default function TestHubPage() {
 
   useEffect(() => {
     showBottomBanner();
-    return () => { hideBanner(); };
+    return () => { removeBanner(); };
   }, []);
 
   const testDescs = [

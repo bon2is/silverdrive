@@ -13,7 +13,7 @@ import { AdBanner } from "@/components/AdBanner";
 import { HistorySection } from "@/components/HistorySection";
 import { useSpeech } from "@/lib/useSpeech";
 import { saveTestRecord } from "@/lib/testHistory";
-import { showBottomBanner, hideBanner, showRewardAd } from "@/lib/useAdMob";
+import { showBottomBanner, removeBanner, showRewardAd } from "@/lib/useAdMob";
 import { Capacitor } from "@capacitor/core";
 
 const GRADE_LABEL: Record<string, string> = {
@@ -151,7 +151,7 @@ export default function ResultPage() {
 
   useEffect(() => {
     showBottomBanner();
-    return () => { hideBanner(); };
+    return () => { removeBanner(); };
   }, []);
 
   return (

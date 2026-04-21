@@ -57,6 +57,12 @@ export async function hideBanner(): Promise<void> {
   await AdMob.hideBanner();
 }
 
+export async function removeBanner(): Promise<void> {
+  if (!isNative()) return;
+  const { AdMob } = await import("@capacitor-community/admob");
+  await AdMob.removeBanner();
+}
+
 // 사용자가 직접 클릭해서 시청하는 리워드 광고
 export async function showRewardAd(): Promise<boolean> {
   if (!isNative()) return false;
