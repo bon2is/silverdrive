@@ -119,8 +119,14 @@ export default function ResultPage() {
   const handleRewardRetry = useCallback(async () => {
     setRewardLoading(true);
     try {
+      // Remove banner BEFORE showing the reward ad — calling removeBanner() during
+      // AdMob's reward-video teardown (from unmount cleanup) races with native threads
+      // and crashes the app. Pre-removing here makes the cleanup a safe no-op.
+      await removeBanner();
       await showRewardAd();
       router.push("/test");
+    } catch {
+      await showBottomBanner(); // restore on unexpected error
     } finally {
       setRewardLoading(false);
     }

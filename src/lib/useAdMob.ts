@@ -35,6 +35,9 @@ export async function showBottomBanner(): Promise<void> {
   const adId = getBannerId();
   if (!adId) return;
   const { AdMob, BannerAdSize, BannerAdPosition } = await import("@capacitor-community/admob");
+  // Destroy any existing banner first so showBanner() always creates a fresh view
+  // (the plugin calls updateExistingAdView() when mAdView != null, skipping position/size)
+  try { await AdMob.removeBanner(); } catch { /* no existing banner */ }
   await AdMob.showBanner({
     adId,
     adSize: BannerAdSize.BANNER,
@@ -48,6 +51,9 @@ export async function showCenterBanner(): Promise<void> {
   const adId = getMiddleWaitId();
   if (!adId) return;
   const { AdMob, BannerAdSize, BannerAdPosition } = await import("@capacitor-community/admob");
+  // Destroy any existing banner first — this also resolves the race condition where
+  // the previous page's removeBanner() cleanup and this showBanner() run concurrently
+  try { await AdMob.removeBanner(); } catch { /* no existing banner */ }
   await AdMob.showBanner({
     adId,
     adSize: BannerAdSize.MEDIUM_RECTANGLE,
@@ -59,13 +65,13 @@ export async function showCenterBanner(): Promise<void> {
 export async function hideBanner(): Promise<void> {
   if (!isNative()) return;
   const { AdMob } = await import("@capacitor-community/admob");
-  await AdMob.hideBanner();
+  try { await AdMob.hideBanner(); } catch { /* no banner to hide */ }
 }
 
 export async function removeBanner(): Promise<void> {
   if (!isNative()) return;
   const { AdMob } = await import("@capacitor-community/admob");
-  await AdMob.removeBanner();
+  try { await AdMob.removeBanner(); } catch { /* no banner to remove */ }
 }
 
 // 사용자가 직접 클릭해서 시청하는 리워드 광고
