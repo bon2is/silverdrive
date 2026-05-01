@@ -3,12 +3,12 @@ import { TestResults } from "./useTestStore";
 export type Grade = "safe" | "caution" | "danger";
 
 export interface ScoreBreakdown {
-  memory:   number; // 0~100
-  trail:    number; // 0~100
-  reaction: number; // 0~100
-  signs:    number; // 0~100
-  hazard:   number; // 0~100
-  total:    number; // 0~100 (단순 평균)
+  memory:   number | null; // null = 미실시
+  trail:    number | null;
+  reaction: number | null;
+  signs:    number | null;
+  hazard:   number | null;
+  total:    number;
   grade:    Grade;
 }
 
@@ -47,13 +47,18 @@ function calcHazard(r: TestResults): number {
   return Math.round((r.hazardAnswers.filter(Boolean).length / r.hazardAnswers.length) * 100);
 }
 
-export function calcScore(results: TestResults): ScoreBreakdown {
-  const memory   = calcMemory(results);
-  const trail    = calcTrail(results);
-  const reaction = calcReaction(results);
-  const signs    = calcSigns(results);
-  const hazard   = calcHazard(results);
-  const total    = Math.round((memory + trail + reaction + signs + hazard) / 5);
+/** selectedTests 없으면 전체 5개 기준으로 계산 */
+export function calcScore(results: TestResults, selectedTests?: string[]): ScoreBreakdown {
+  const sel = selectedTests ?? ["memory", "trail", "reaction", "signs", "hazard"];
+
+  const memory   = sel.includes("memory")   ? calcMemory(results)   : null;
+  const trail    = sel.includes("trail")    ? calcTrail(results)    : null;
+  const reaction = sel.includes("reaction") ? calcReaction(results) : null;
+  const signs    = sel.includes("signs")    ? calcSigns(results)    : null;
+  const hazard   = sel.includes("hazard")   ? calcHazard(results)   : null;
+
+  const nums = [memory, trail, reaction, signs, hazard].filter((s): s is number => s !== null);
+  const total = nums.length > 0 ? Math.round(nums.reduce((a, b) => a + b, 0) / nums.length) : 0;
 
   const grade: Grade =
     total >= 80 ? "safe" :
